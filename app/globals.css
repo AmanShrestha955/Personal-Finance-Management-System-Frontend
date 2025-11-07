@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-primary-100: #7eb88d;
+  --color-primary-200: #67ac7b;
+  --color-primary-300: #4fa168;
+  --color-primary-400: #349556;
+  --color-primary-500: #008944;
+  --color-primary-600: #00763a;
+  --color-primary-700: #006430;
+  --color-primary-800: #005326;
+  --color-primary-900: #00421d;
+  --color-background-100: #f2f1f3;
+  --color-background-200: #d7d6dc;
+  --color-background-300: #bcbac4;
+  --color-background-400: #a19fad;
+  --color-background-500: #868396;
+  --color-background-600: #6d697c;
+  --color-background-700: #545260;
+  --color-background-800: #3c3b45;
+  --color-background-900: #232228;
+  --color-text-100: #ffffff;
+  --color-text-200: #dedede;
+  --color-text-300: #bebebe;
+  --color-text-400: #9e9e9e;
+  --color-text-500: #808080;
+  --color-text-600: #636363;
+  --color-text-700: #484848;
+  --color-text-800: #2e2e2e;
+  --color-text-900: #161616;
+  --color-text-1000: #030303;
+  --font-sansation: "Sansation", sans-serif;
+  --font-nunitosans: "Nunito Sans", sans-serif;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --text-display: clamp(3rem, 8vw, 5rem);
+  --text-title: clamp(2.5rem, 6vw, 3.8125rem);
+  --text-title2: clamp(2rem, 5vw, 2.9375rem);
+  --text-heading: clamp(1.5rem, 4vw, 2.25rem);
+  --text-heading2: clamp(1.25rem, 3vw, 1.6875rem);
+  --text-heading3: clamp(1rem, 2.5vw, 1.3125rem);
+  --text-body: clamp(0.875rem, 2vw, 1rem);
+  --text-caption: clamp(0.625rem, 1.5vw, 0.75rem);
+  --spacing-none: 0rem;
+  --spacing-xxs: 0.25rem;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 2.5rem;
+  --spacing-3xl: 3rem;
+  --spacing-4xl: 4rem;
+  --spacing-5xl: 6rem;
+  --spacing-6xl: 8rem;
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+  --radius-full: 999px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
