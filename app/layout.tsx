@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sansation, Nunito_Sans } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const sansation = Sansation({
   variable: "--font-sansation",
@@ -28,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${sansation.variable} ${nunitoSans.variable} antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

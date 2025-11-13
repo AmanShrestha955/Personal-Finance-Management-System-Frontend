@@ -3,15 +3,16 @@
 import { NextPage } from "next";
 import Link from "next/link";
 import backgroundImage from "../../public/auth_image.jpg";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import GoogleIcon from "@/component/icons/google";
+import { SignUpForm } from "@/types/type";
 
-interface Props {}
+// interface Props {}
 
-const Page: NextPage<Props> = ({}) => {
-  const { register, handleSubmit } = useForm();
+const Page: NextPage = () => {
+  const { register, handleSubmit } = useForm<SignUpForm>();
 
-  const onSubmit = (data: any) => {
+  const onSubmit: SubmitHandler<SignUpForm> = (data) => {
     console.log(data);
   };
 

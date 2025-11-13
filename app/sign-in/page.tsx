@@ -3,16 +3,29 @@
 import { NextPage } from "next";
 import Link from "next/link";
 import backgroundImage from "../../public/auth_image.jpg";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import GoogleIcon from "@/component/icons/google";
+import { LoginData, SignInForm } from "@/types/type";
+import { useMutation } from "@tanstack/react-query";
+import { postData } from "@/utils/request";
 
-interface Props {}
+const Page: NextPage = () => {
+  const { register, handleSubmit } = useForm<SignInForm>();
+  const mutation = useMutation({
+    mutationFn: async (data: SignInForm) =>
+      postData<SignInForm, LoginData>("/auth/login", data),
+    onSuccess: (data) => {
+      console.log("Sign in successful:", data);
+      localStorage.setItem("token", data.token);
+    },
+    onError: (error) => {
+      console.error("Sign in failed:", error);
+    },
+  });
 
-const Page: NextPage<Props> = ({}) => {
-  const { register, handleSubmit } = useForm();
-
-  const onSubmit = (data: any) => {
+  const onSubmit: SubmitHandler<SignInForm> = (data) => {
     console.log(data);
+    mutation.mutate(data);
   };
 
   return (
@@ -60,6 +73,7 @@ const Page: NextPage<Props> = ({}) => {
                 <input
                   type="checkbox"
                   id="remember"
+                  {...register("rememberMe")}
                   className="w-4 h-4 accent-primary-500 cursor-pointer"
                 />
                 <label
