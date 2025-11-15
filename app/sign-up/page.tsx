@@ -5,22 +5,40 @@ import Link from "next/link";
 import backgroundImage from "../../public/auth_image.jpg";
 import { useForm, SubmitHandler } from "react-hook-form";
 import GoogleIcon from "@/component/icons/google";
-import { SignUpForm } from "@/types/type";
+import { SignUpData, SignUpForm } from "@/types/type";
+import { useMutation } from "@tanstack/react-query";
+import { postData } from "@/utils/request";
+import { Loader2 } from "lucide-react";
 
 // interface Props {}
 
 const Page: NextPage = () => {
   const { register, handleSubmit } = useForm<SignUpForm>();
+  const { data, mutate, isPending } = useMutation({
+    mutationFn: async (data: SignUpForm) =>
+      postData<SignUpForm, SignUpData>("/auth/signup", data),
+    onSuccess: (data) => {
+      console.log("Sign up successful:", data);
+    },
+    onError: (error) => {
+      console.error("Sign up failed:", error);
+    },
+  });
 
   const onSubmit: SubmitHandler<SignUpForm> = (data) => {
     console.log(data);
+    if (data.password !== data.confirmPassword) {
+      console.log("Password dose not match");
+      return;
+    }
+    mutate(data);
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-0 w-screen h-screen p-sm bg-background-100">
+    <div className="flex flex-col lg:flex-row gap-0 w-screen min-h-screen bg-background-100">
       {/* left side */}
       <div className="flex-1">
-        <div className="flex flex-col px-3xl py-2xl lg:px-6xl lg:py-5xl gap-md">
+        <div className="flex flex-col px-3xl py-2xl lg:px-6xl lg:pt-5xl gap-md">
           {/* need to put font family here */}
           <div className="flex flex-col gap-xs">
             <h1 className="text-heading2 font-sansation font-bold text-text-1000 leading-[100%]">
@@ -34,6 +52,17 @@ const Page: NextPage = () => {
             onSubmit={handleSubmit(onSubmit)}
             className="flex flex-col gap-md"
           >
+            <div className="flex flex-col gap-xs">
+              <p className="font-nunitosans font-bold text-caption text-text-600 leading-[100%]">
+                Username
+              </p>
+              <input
+                type="text"
+                placeholder="Username"
+                {...register("name")}
+                className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-background-200 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
+              />
+            </div>
             <div className="flex flex-col gap-xs">
               <p className="font-nunitosans font-bold text-caption text-text-600 leading-[100%]">
                 Email
@@ -67,32 +96,16 @@ const Page: NextPage = () => {
                 className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-background-200 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
               />
             </div>
-            <div className="flex flex-row justify-between">
-              <div className="flex flex-row gap-xs items-center">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  className="w-4 h-4 accent-primary-500 cursor-pointer"
-                />
-                <label
-                  htmlFor="remember"
-                  className="font-nunitosans font-bold text-text-600 text-caption leading-[100%] cursor-pointer"
-                >
-                  Remember me
-                </label>
-              </div>
-              <Link
-                href="/forgot-password"
-                className="text-caption font-nunitosans text-primary-500 font-bold hover:underline"
-              >
-                Forgot Password?
-              </Link>
-            </div>
             <button
+              disabled={isPending}
               type="submit"
               className="font-nunitosans font-bold text-text-100 text-body py-sm rounded-lg bg-primary-500 hover:bg-primary-600 active:bg-primary-800 transition-all duration-150"
             >
-              Sign Up
+              {isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                "Sign Up"
+              )}
             </button>
           </form>
           {/* --- or --- */}
@@ -122,7 +135,7 @@ const Page: NextPage = () => {
         </div>
       </div>
       {/* right side */}
-      <div className="flex-1 rounded-lg bg-primary-500 relative hidden lg:flex">
+      <div className="flex-1 rounded-lg m-sm bg-primary-500 relative hidden lg:flex">
         {/* image and blur effect */}
         <div
           className="absolute opacity-20 w-full h-full rounded-lg bg-cover bg-center blur-[2px]"

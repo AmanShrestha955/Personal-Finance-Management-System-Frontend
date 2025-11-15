@@ -12,6 +12,12 @@ export type SignUpForm = {
 };
 
 export type LoginData = {
-  token: string;
+  token?: string;
   message: string;
+  error?: string;
+};
+
+export type SignUpData = {
+  message: string;
+  error?: string;
 };
