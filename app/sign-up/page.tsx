@@ -14,7 +14,7 @@ import { Loader2 } from "lucide-react";
 
 const Page: NextPage = () => {
   const { register, handleSubmit } = useForm<SignUpForm>();
-  const { data, mutate, isPending } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (data: SignUpForm) =>
       postData<SignUpForm, SignUpData>("/auth/signup", data),
     onSuccess: (data) => {
