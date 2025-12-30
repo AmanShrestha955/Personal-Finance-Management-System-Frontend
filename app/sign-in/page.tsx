@@ -8,15 +8,20 @@ import GoogleIcon from "@/component/icons/google";
 import { LoginData, SignInForm } from "@/types/type";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/utils/request";
+import { useRouter } from "next/navigation";
 
 const Page: NextPage = () => {
+  const navigation = useRouter();
   const { register, handleSubmit } = useForm<SignInForm>();
   const mutation = useMutation({
     mutationFn: async (data: SignInForm) =>
       postData<SignInForm, LoginData>("/auth/login", data),
     onSuccess: (data) => {
       console.log("Sign in successful:", data);
-      localStorage.setItem("token", data.token);
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      navigation.push("/dashboard");
     },
     onError: (error) => {
       console.error("Sign in failed:", error);
@@ -54,7 +59,7 @@ const Page: NextPage = () => {
                 type="text"
                 placeholder="Email"
                 {...register("email")}
-                className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-background-200 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
+                className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-text-300 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
               />
             </div>
             <div className="flex flex-col gap-xs">
@@ -65,7 +70,7 @@ const Page: NextPage = () => {
                 type="password"
                 placeholder="Password"
                 {...register("password")}
-                className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-background-200 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
+                className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-text-300 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
               />
             </div>
             <div className="flex flex-row justify-between">
@@ -99,16 +104,16 @@ const Page: NextPage = () => {
           </form>
           {/* --- or --- */}
           <div className="flex flex-row gap-sm items-center">
-            <div className="w-full h-px bg-background-300"></div>
+            <div className="w-full h-px bg-text-300"></div>
             <p className="text-caption font-bold font-nunitosans text-text-600 leading-[100%]">
               OR
             </p>
-            <div className="w-full h-px bg-background-300"></div>
+            <div className="w-full h-px bg-text-300"></div>
           </div>
           {/* google sign up button */}
-          <button className="flex flex-row items-center py-xs px-sm border border-background-200 rounded-full shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_6px_-2px_rgba(0,0,0,0.19)] cursor-pointer hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_2px_6px_-2px_rgba(0,0,0,0.25)] active:shadow-[0_0_0_1px_rgba(0,0,0,0.15),0_1px_3px_-1px_rgba(0,0,0,0.15)] transition-all duration-150">
+          <button className="flex flex-row items-center py-xs px-sm border border-text-300 rounded-full shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_6px_-2px_rgba(0,0,0,0.19)] cursor-pointer hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_2px_6px_-2px_rgba(0,0,0,0.25)] active:shadow-[0_0_0_1px_rgba(0,0,0,0.15),0_1px_3px_-1px_rgba(0,0,0,0.15)] transition-all duration-150">
             <GoogleIcon />{" "}
-            <p className="flex-1 text-center font-nunitosans font-medium text-body leading-[130%]">
+            <p className="flex-1 text-center font-nunitosans font-medium text-text-1000 text-body leading-[130%]">
               Sign in with google
             </p>
           </button>

@@ -61,8 +61,8 @@ export default function DashboardLayout({
     router?.push(`/dashboard/${path}`);
   };
   return (
-    <div className="flex flex-row gap-9 bg-background-100">
-      <div className="h-screen w-[100px] relative">
+    <div className="flex flex-row w-full gap-9 bg-background-100">
+      <div className="h-screen w-[100px] sticky top-0 z-50">
         <nav className="group/nav flex w-[100px] hover:w-[272px] flex-col h-full bg-white transition-[width] duration-600">
           <div className="flex flex-col justify-between h-full pb-2.5 px-md">
             <div className="flex flex-col pt-[64px] gap-[60px]">
@@ -104,7 +104,7 @@ export default function DashboardLayout({
                               : "text-black"
                           } group-hover/items:text-white transition-colors duration-300`}
                         />
-                        <p className=" w-0 hidden overflow-hidden group-hover/nav:block group-hover/nav:w-full whitespace-nowrap group-hover/items:text-white transition-all transition-discrete duration-300">
+                        <p className=" w-0 hidden overflow-hidden group-hover/nav:block group-hover/nav:w-full font-nunitosans whitespace-nowrap group-hover/items:text-white transition-all transition-discrete duration-300">
                           {item.label}
                         </p>
                       </label>
@@ -122,8 +122,7 @@ export default function DashboardLayout({
           </div>
         </nav>
       </div>
-      {children}
+      <div className="flex-1 min-w-0 overflow-x-hidden">{children}</div>
     </div>
-    // <div className="w-screen h-screen">{children}</div>
   );
 }

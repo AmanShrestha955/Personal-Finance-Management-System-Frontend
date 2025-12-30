@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${sansation.variable} ${nunitoSans.variable} antialiased`}
+        className={`${sansation.variable} ${nunitoSans.variable} antialiased bg-background-100 scrollbar [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full  [&::-webkit-scrollbar-thumb]:bg-primary-300 [&::-webkit-scrollbar-track]:bg-background-100/0`}
       >
         <Providers>{children}</Providers>
       </body>
