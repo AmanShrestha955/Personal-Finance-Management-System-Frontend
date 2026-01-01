@@ -48,3 +48,42 @@ export type DropDownProps<T> = {
   isOpen: boolean;
   onToggle: () => void;
 };
+
+export type TransactionFormData = {
+  title: string;
+  type: "expense" | "income";
+  amount: number;
+  transactionDate: string;
+  category: string;
+  paymentMethod: string;
+  description: string;
+  tags: string[];
+  receipt: FileList | null;
+  note: string;
+};
+export type BackendErrorResponse = {
+  message: string;
+  error?: string;
+};
+
+export type TransactionFormResponseData = {
+  message: string;
+};
+
+export type AccountResponseData = {
+  data: {
+    balance: number;
+  }[];
+};
+
+export type BudgetData = {
+  category: string;
+  budgetAmount: number;
+  spentAmount: number;
+  alertThreshold: number;
+};
+
+export type AllBudgetResponseData = {
+  message: string;
+  data: BudgetData[];
+};

@@ -3,18 +3,76 @@ import DropDown from "@/component/DropDown";
 import TagIcon from "@/component/icons/tag";
 import Input from "@/component/Input";
 import Tag from "@/component/Tag";
+import {
+  AccountResponseData,
+  AllBudgetResponseData,
+  BackendErrorResponse,
+  BudgetData,
+  TransactionFormData,
+  TransactionFormResponseData,
+} from "@/types/type";
+import { getData, postData } from "@/utils/request";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { NextPage } from "next";
-import { useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 
-// interface Props {}
+const Page: NextPage = () => {
+  const navigation = useRouter();
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<TransactionFormData>({
+    defaultValues: {
+      title: "",
+      type: "expense",
+      amount: 0,
+      transactionDate: new Date().toISOString().split("T")[0],
+      category: "",
+      paymentMethod: "",
+      description: "",
+      tags: [],
+      receipt: null,
+      note: "",
+    },
+  });
+  const amount = watch("amount");
+  const type = watch("type");
 
-const Page: NextPage = ({}) => {
+  const mutation = useMutation({
+    mutationFn: async (data: TransactionFormData) => {
+      return await postData<TransactionFormData, TransactionFormResponseData>(
+        "/transactions/",
+        data
+      );
+    },
+    onSuccess: (data) => {
+      console.log("sucessfully send form data: ", data);
+      navigation.push("/dashboard/transaction-management");
+    },
+
+    onError: (error: AxiosError<BackendErrorResponse>) => {
+      const message = error?.response?.data?.error || error.message;
+      setErrorMessage(message);
+      console.log("error in form data post: ", message);
+    },
+  });
+
   const categoryOptions = [
     { text: "Food", icon: <></> },
     { text: "Transport", icon: <></> },
     { text: "Shopping", icon: <></> },
     { text: "Bills", icon: <></> },
+    { text: "rent", icon: <></> },
     { text: "Entertainment", icon: <></> },
+    { text: "Others", icon: <></> },
   ];
   const defaultCategorySelectedOption = {
     text: "Select Category",
@@ -37,23 +95,97 @@ const Page: NextPage = ({}) => {
     defaultPaymentSelectedOption
   );
 
-  const [selectedTags, setSelectedTags] = useState<string[]>(["tag1", "tag2"]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const recentTags = ["recenttag1", "recenttag2", "recenttag3", "recenttag4"];
+
   const selectTagFun = (tag: string) => {
     if (selectedTags.includes(tag)) {
       return;
     }
-    setSelectedTags([...selectedTags, tag]);
+    const newTags = [...selectedTags, tag];
+    setSelectedTags(newTags);
+    setValue("tags", newTags);
   };
+
   const removeTagFun = (tagToRemove: string) => {
-    setSelectedTags(selectedTags.filter((tag) => tag !== tagToRemove));
+    const newTags = selectedTags.filter((tag) => tag !== tagToRemove);
+    setSelectedTags(newTags);
+    setValue("tags", newTags);
   };
+
+  const { data: accountData } = useQuery({
+    queryKey: ["account"],
+    queryFn: () => getData<null, AccountResponseData>("/accounts"),
+  });
+
+  const { data: budgetData } = useQuery({
+    queryKey: ["budget"],
+    queryFn: () => getData<null, AllBudgetResponseData>("/budgets"),
+  });
+
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [afterTransactionBalance, setAfterTransactionBalance] = useState(
+    (accountData?.data[0].balance as number) || 0
+  );
+  const [selectedBudget, setSelectedBudget] = useState<
+    undefined | BudgetData
+  >();
+
+  const onSubmit = (data: TransactionFormData) => {
+    data.transactionDate = new Date(data.transactionDate).toISOString();
+    console.log(data);
+
+    mutation.mutate(data);
+  };
+  useEffect(() => {
+    // Check if budgetData exists and has the selected category
+    setSelectedBudget(
+      budgetData?.data?.find(
+        (budget) => budget.category === selectedCategory.text
+      )
+    );
+    console.log(
+      budgetData?.data?.find(
+        (budget) => budget.category === selectedCategory.text
+      )
+    );
+  }, [budgetData?.data, selectedCategory]);
+
+  useEffect(() => {
+    console.log(accountData);
+    setAfterTransactionBalance(accountData?.data[0].balance as number);
+  }, [accountData]);
+
+  useEffect(() => {
+    console.log(accountData?.data[0].balance);
+    if (type === "expense") {
+      setAfterTransactionBalance(0);
+      setAfterTransactionBalance(
+        (accountData?.data[0].balance as number) - parseFloat(amount.toString())
+      );
+    } else {
+      setAfterTransactionBalance(0);
+
+      setAfterTransactionBalance(
+        (accountData?.data[0].balance as number) + parseFloat(amount.toString())
+      );
+    }
+  }, [accountData?.data, amount, type]);
   return (
     <div className="flex flex-row gap-md mr-[32px]">
-      <form className="flex-1 flex flex-col gap-lg">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex-1 flex flex-col gap-lg"
+      >
         <h1 className="font-sansation mt-8 font-bold text-heading text-text-1000 leading-[130%]">
           Transaction Details
         </h1>
+
+        <p className="font-nunitosans text-body text-red-700 font-bold">
+          {errorMessage}
+        </p>
+
         {/* basic details */}
         <div className="flex flex-col gap-sm">
           <h3 className="font-nunitosans font-bold text-text-1000 text-heading3 leading-[130%]">
@@ -66,9 +198,15 @@ const Page: NextPage = ({}) => {
             <Input
               placeholder="eg: Food with Family"
               type="text"
-              name="title"
+              {...register("title", { required: "Title is required" })}
             />
+            {errors.title && (
+              <span className="text-red-500 text-sm">
+                {errors.title.message}
+              </span>
+            )}
           </div>
+
           <div className="flex flex-row gap-md">
             {/* transaction type */}
             <div className="flex-1 flex flex-col gap-xxs">
@@ -79,9 +217,10 @@ const Page: NextPage = ({}) => {
                 <div className="flex-1 min-w-36 max-w-full">
                   <input
                     type="radio"
-                    name="transaction-type"
+                    value="expense"
                     id="expenses"
                     className="hidden peer"
+                    {...register("type")}
                     defaultChecked
                   />
                   <label
@@ -94,9 +233,10 @@ const Page: NextPage = ({}) => {
                 <div className="flex-1 min-w-36 max-w-full">
                   <input
                     type="radio"
-                    name="transaction-type"
+                    value="income"
                     id="income"
                     className="hidden peer"
+                    {...register("type")}
                   />
                   <label
                     htmlFor="income"
@@ -107,6 +247,7 @@ const Page: NextPage = ({}) => {
                 </div>
               </div>
             </div>
+
             {/* amount */}
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
@@ -115,19 +256,41 @@ const Page: NextPage = ({}) => {
               <Input
                 placeholder="0.00"
                 type="number"
-                name="amount"
                 prefix="Rs"
+                {...register("amount", {
+                  required: "Amount is required",
+                  min: {
+                    value: 0.01,
+                    message: "Amount must be greater than 0",
+                  },
+                })}
               />
+              {errors.amount && (
+                <span className="text-red-500 text-sm">
+                  {errors.amount.message}
+                </span>
+              )}
             </div>
           </div>
+
           {/* Date */}
           <div className="flex-1 flex flex-col gap-xxs">
             <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
               Date
             </p>
-            <Input placeholder="" type="date" name="date" />
+            <Input
+              placeholder=""
+              type="date"
+              {...register("transactionDate", { required: "Date is required" })}
+            />
+            {errors.transactionDate && (
+              <span className="text-red-500 text-sm">
+                {errors.transactionDate.message}
+              </span>
+            )}
           </div>
         </div>
+
         <div className="flex flex-col gap-sm">
           <h3 className="font-nunitosans font-bold text-text-1000 text-heading3 leading-[130%]">
             Categorization
@@ -138,37 +301,65 @@ const Page: NextPage = ({}) => {
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
                 Categories
               </p>
-              <DropDown
-                options={categoryOptions}
-                selectedOption={selectedCategory}
-                onSelect={(option) => {
-                  setSelectedCategory(option);
-                  setIsCategoryDropdownOpen(false);
-                }}
-                isOpen={isCategoryDropdownOpen}
-                onToggle={() =>
-                  setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
-                }
+              <Controller
+                name="category"
+                control={control}
+                rules={{ required: "Category is required" }}
+                render={({ field }) => (
+                  <DropDown
+                    options={categoryOptions}
+                    selectedOption={selectedCategory}
+                    onSelect={(option) => {
+                      setSelectedCategory(option);
+                      setIsCategoryDropdownOpen(false);
+                      field.onChange(option.text);
+                    }}
+                    isOpen={isCategoryDropdownOpen}
+                    onToggle={() =>
+                      setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
+                    }
+                  />
+                )}
               />
+              {errors.category && (
+                <span className="text-red-500 text-sm">
+                  {errors.category.message}
+                </span>
+              )}
             </div>
+
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
                 Payment Method
               </p>
-              <DropDown
-                options={paymentOptions}
-                selectedOption={selectedPaymentMethod}
-                onSelect={(option) => {
-                  setSelectedPaymentMethod(option);
-                  setIsPaymentDropdownOpen(false);
-                }}
-                isOpen={isPaymentDropdownOpen}
-                onToggle={() =>
-                  setIsPaymentDropdownOpen(!isPaymentDropdownOpen)
-                }
+              <Controller
+                name="paymentMethod"
+                control={control}
+                rules={{ required: "Payment Method is required" }}
+                render={({ field }) => (
+                  <DropDown
+                    options={paymentOptions}
+                    selectedOption={selectedPaymentMethod}
+                    onSelect={(option) => {
+                      setSelectedPaymentMethod(option);
+                      setIsPaymentDropdownOpen(false);
+                      field.onChange(option.text); // You'll need to change this to actual account ID
+                    }}
+                    isOpen={isPaymentDropdownOpen}
+                    onToggle={() =>
+                      setIsPaymentDropdownOpen(!isPaymentDropdownOpen)
+                    }
+                  />
+                )}
               />
+              {errors.paymentMethod && (
+                <span className="text-red-500 text-sm">
+                  {errors.paymentMethod.message}
+                </span>
+              )}
             </div>
           </div>
+
           <div className="flex flex-col gap-xxs">
             <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-medium">
               Description
@@ -176,10 +367,11 @@ const Page: NextPage = ({}) => {
             <Input
               placeholder="What was this transaction for?"
               type="text"
-              name="description"
+              {...register("description")}
             />
           </div>
         </div>
+
         <div className="flex flex-col gap-sm">
           <h3 className="font-nunitosans font-bold text-text-1000 text-heading3 leading-[130%]">
             Optional Details
@@ -203,7 +395,7 @@ const Page: NextPage = ({}) => {
               <Input
                 placeholder="Add tags (press Enter)"
                 type="text"
-                name="tags"
+                name="tagInput"
                 prefix={<TagIcon className="text-text-500" />}
                 suffix={<TagIcon className="text-text-1000" />}
                 onKeyDown={(e) => {
@@ -213,22 +405,71 @@ const Page: NextPage = ({}) => {
                     const newTag = input.value.trim();
 
                     if (newTag && !selectedTags.includes(newTag)) {
-                      setSelectedTags([...selectedTags, newTag]);
-                      input.value = ""; // Clear input after adding
+                      const newTags = [...selectedTags, newTag];
+                      setSelectedTags(newTags);
+                      setValue("tags", newTags);
+                      input.value = "";
                     }
                   }
                 }}
               />
             </div>
+
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
                 Receipt
               </p>
-              <button className="font-nunitosans font-bold text-text-1000 text-body py-xs px-md rounded-sm border border-card-200 bg-card-100 hover:bg-card-200 active:bg-card-300 shadow-effect-2 transition-all duration-150">
+              <input
+                type="file"
+                id="receipt-upload"
+                accept="image/*"
+                className="hidden"
+                {...register("receipt")}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Create preview
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setReceiptPreview(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+
+                    // Update form value
+                    setValue("receipt", e.target.files);
+                  }
+                }}
+              />
+              <label
+                htmlFor="receipt-upload"
+                className="font-nunitosans font-bold text-text-1000 text-body py-xs px-md rounded-sm border border-card-200 bg-card-100 hover:bg-card-200 active:bg-card-300 shadow-effect-2 transition-all duration-150 cursor-pointer text-center"
+              >
                 Upload Receipt
-              </button>
+              </label>
+              {receiptPreview && (
+                <div className="mt-xs relative">
+                  <Image
+                    width={100}
+                    height={100}
+                    src={receiptPreview}
+                    alt="Receipt preview"
+                    className="w-full h-32 object-cover rounded-sm border border-card-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReceiptPreview(null);
+                      setValue("receipt", null);
+                    }}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
             </div>
           </div>
+
           <div className="flex-1 flex flex-col gap-xxs">
             <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
               Recent Tags
@@ -244,6 +485,7 @@ const Page: NextPage = ({}) => {
               ))}
             </div>
           </div>
+
           <div className="flex-1 flex flex-col gap-xxs">
             <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
               Notes
@@ -252,41 +494,75 @@ const Page: NextPage = ({}) => {
               placeholder="Any additional notes?"
               rows={3}
               className="bg-card-100 p-xs rounded-sm border border-text-300"
+              {...register("note")}
             />
           </div>
         </div>
+
         {/* button */}
         <div className="flex flex-row justify-end items-center gap-md">
-          <button className="font-nunitosans font-bold text-text-100 text-body py-xs px-md rounded-sm bg-primary-500 hover:bg-primary-600 active:bg-primary-800 shadow-effect-2 transition-all duration-150">
-            Save Transaction
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="font-nunitosans font-bold text-text-100 text-body py-xs px-md rounded-sm bg-primary-500 hover:bg-primary-600 active:bg-primary-800 shadow-effect-2 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? "Saving..." : "Save Transaction"}
           </button>
-          <button className="font-nunitosans font-bold text-text-1000 text-body py-xs px-md rounded-sm border border-card-200 bg-card-100 hover:bg-card-200 active:bg-card-300 shadow-effect-2 transition-all duration-150">
-            Cancle
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigation.push("/dashboard/transaction-management");
+            }}
+            className="font-nunitosans font-bold text-text-1000 text-body py-xs px-md rounded-sm border border-card-200 bg-card-100 hover:bg-card-200 active:bg-card-300 shadow-effect-2 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
           </button>
         </div>
       </form>
+
       <div className="flex flex-col gap-md">
         <div className="flex flex-col gap-md py-lg px-md w-[442px] min-w-[300px] rounded-md bg-card-200">
           <h4 className="font-nunitosans font-bold text-text-1000 text-heading3">
             Transaction Summary
           </h4>
           <p className="font-nunitosans text-text-1000">
-            After this transaction: <b>Balance = $1,232.34</b>
+            After this transaction:{" "}
+            <b>Balance = Rs {afterTransactionBalance}</b>
           </p>
         </div>
-        <div className="flex flex-col gap-md py-lg px-md max-w-[442px] rounded-md border border-green-400 bg-green-200">
-          <h4 className="font-nunitosans font-bold text-text-1000 text-heading3">
-            Budget Status
-          </h4>
-          <div className="flex flex-col gap-xxs">
-            <p className="font-nunitosans font-normal text-text-1000">
-              You’ve spent $120 of your $1,326.34 Food budget.
-            </p>
-            <p className="font-nunitosans font-bold text-text-1000">
-              Remaining: $1,206.34.
-            </p>
+        {selectedBudget && type === "expense" ? (
+          <div
+            className={`flex flex-col gap-md py-lg px-md max-w-[442px] rounded-md border ${
+              (selectedBudget.spentAmount / selectedBudget.budgetAmount) * 100 <
+              selectedBudget.alertThreshold
+                ? "border-green-400 bg-green-200 text-green-600"
+                : (selectedBudget.spentAmount / selectedBudget.budgetAmount) *
+                    100 <
+                  100
+                ? "border-yellow-400 bg-yellow-200 text-yellow-600"
+                : "border-red-400 bg-red-200 text-red-600"
+            }`}
+          >
+            <h4 className="font-nunitosans font-bold  text-heading3">
+              Budget Status
+            </h4>
+            <div className="flex flex-col gap-xxs">
+              <p className="font-nunitosans font-normal ">
+                You&apos;ve spent Rs {selectedBudget?.spentAmount} of your Rs{" "}
+                {selectedBudget?.budgetAmount} Food budget.
+              </p>
+              <p className="font-nunitosans font-bold ">
+                Remaining: Rs{" "}
+                {(selectedBudget?.budgetAmount ?? 0) -
+                  (selectedBudget?.spentAmount ?? 0)}
+                .
+              </p>
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );
