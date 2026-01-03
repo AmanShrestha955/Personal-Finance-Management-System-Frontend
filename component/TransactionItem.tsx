@@ -3,26 +3,32 @@
 import EditIcon from "./icons/edit";
 import DeleteIcon from "./icons/delete";
 import React from "react";
+import { useRouter } from "next/navigation";
 
 type TransactionItemProps = {
+  _id: string;
   title: string;
   category: string;
   transactionDate: Date;
   type: string;
   amount: number;
   onClick: () => void;
+  onDelete: () => void;
   isSelected: boolean;
 };
 
 const TransactionItem: React.FC<TransactionItemProps> = ({
+  _id,
   title,
   category,
   transactionDate,
   type,
   amount,
+  onDelete,
   onClick,
   isSelected,
 }: TransactionItemProps) => {
+  const router = useRouter();
   const date = new Date(transactionDate);
   const formattedDate = date.toLocaleDateString("en-US", {
     month: "short",
@@ -65,7 +71,9 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
             className="cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
-              console.log("edit");
+              router.push(
+                `/dashboard/transaction-management/add-transaction?id=${_id}`
+              );
             }}
           >
             <EditIcon className="w-[18px] h-[18px] text-text-600" />
@@ -74,7 +82,13 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
             className="cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
-              console.log("delete");
+              if (
+                window.confirm(
+                  "Are you sure you want to delete this transaction?"
+                )
+              ) {
+                onDelete();
+              }
             }}
           >
             <DeleteIcon className="w-[18px] h-[18px] text-text-600" />

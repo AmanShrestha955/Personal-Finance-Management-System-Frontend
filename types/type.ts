@@ -87,3 +87,8 @@ export type AllBudgetResponseData = {
   message: string;
   data: BudgetData[];
 };
+
+export type BudgetFormResponseData = {
+  message: string;
+  data: BudgetData;
+};

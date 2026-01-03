@@ -5,14 +5,15 @@ import FilterIcon from "@/component/icons/filter";
 import SearchIcon from "@/component/icons/search";
 import TransactionDetailCard from "@/component/TransactionDetailCard";
 import TransactionItem from "@/component/TransactionItem";
-import { TransactionDetail } from "@/types/type";
+import { BackendErrorResponse, TransactionDetail } from "@/types/type";
 import { Plus } from "lucide-react";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getData } from "@/utils/request";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deleteData, getData } from "@/utils/request";
 import { BlockList } from "net";
+import { AxiosError } from "axios";
 type TransactionData = {
   message: string;
   data: TransactionDetail[];
@@ -32,6 +33,7 @@ type BudgetData = {
   data: BudgetDetail[];
 };
 const Page: NextPage = ({}) => {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
@@ -41,7 +43,7 @@ const Page: NextPage = ({}) => {
     isLoading: isLoadingTransactionData,
     error: transactionDataError,
   } = useQuery({
-    queryKey: ["transaction"],
+    queryKey: ["transactions"],
     queryFn: () => getData<null, TransactionData>("/transactions/"),
     select: (response) => response.data,
   });
@@ -50,7 +52,7 @@ const Page: NextPage = ({}) => {
     isLoading: isLoadingBudgetData,
     error: budgetDataError,
   } = useQuery({
-    queryKey: ["budget"],
+    queryKey: ["budgets"],
     queryFn: () => getData<null, BudgetData>("/budgets/"),
     select: (response) => response.data,
   });
@@ -65,6 +67,25 @@ const Page: NextPage = ({}) => {
     setSelectedTransaction(transaction);
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await deleteData(`/transactions/${id}`);
+    },
+    onSuccess: () => {
+      console.log("Transaction deleted successfully");
+      // Refetch the transactions to update the list
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      setSelectedTransaction(null); // Clear selected transaction
+    },
+    onError: (error: AxiosError<BackendErrorResponse>) => {
+      const message = error?.response?.data?.error || error.message;
+      console.log("Error deleting transaction: ", message);
+      // Optionally show error message to user
+    },
+  });
+
   useEffect(() => {
     console.log(transactionData);
   }, [transactionData]);
@@ -78,7 +99,12 @@ const Page: NextPage = ({}) => {
       </h1>
       <div className="flex flex-row justify-between items-center mb-lg">
         <p className="font-nunitosans text-heading3 font-bold">Budget Alerts</p>
-        <button className="flex flex-row gap-sm rounded-sm items-center font-nunitosans cursor-pointer px-sm py-xxs bg-primary-500 text-white hover:bg-primary-600 hover:shadow-effect-2 active:bg-primary-700 transition-all duration-500">
+        <button
+          onClick={() =>
+            router.push("/dashboard/transaction-management/add-alert")
+          }
+          className="flex flex-row gap-sm rounded-sm items-center font-nunitosans cursor-pointer px-sm py-xxs bg-primary-500 text-white hover:bg-primary-600 hover:shadow-effect-2 active:bg-primary-700 transition-all duration-500"
+        >
           <Plus size={16} />
           <p>Alerts</p>
         </button>
@@ -167,6 +193,7 @@ const Page: NextPage = ({}) => {
                     key={index}
                     {...transaction}
                     onClick={() => onClickTransactionItem(transaction)}
+                    onDelete={() => deleteMutation.mutate(transaction._id)}
                     isSelected={
                       selectedTransaction
                         ? selectedTransaction._id === transaction._id

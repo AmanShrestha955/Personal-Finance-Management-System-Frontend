@@ -11,7 +11,7 @@ import {
   TransactionFormData,
   TransactionFormResponseData,
 } from "@/types/type";
-import { getData, postData } from "@/utils/request";
+import { getData, postData, putData } from "@/utils/request";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
@@ -19,15 +19,21 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
 
 const Page: NextPage = () => {
   const navigation = useRouter();
+  const searchParams = useSearchParams();
+  const transactionId = searchParams.get("id");
+  const isEditMode = !!transactionId;
+
   const {
     register,
     handleSubmit,
     control,
     setValue,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<TransactionFormData>({
     defaultValues: {
@@ -46,7 +52,18 @@ const Page: NextPage = () => {
   const amount = watch("amount");
   const type = watch("type");
 
-  const mutation = useMutation({
+  // Fetch transaction data if in edit mode
+  const { data: transactionData, isLoading: isLoadingTransaction } = useQuery({
+    queryKey: ["transaction", transactionId],
+    queryFn: () =>
+      getData<null, { data: TransactionFormData & { _id: string } }>(
+        `/transactions/${transactionId}`
+      ),
+    enabled: isEditMode,
+    select: (response) => response.data,
+  });
+
+  const createMutation = useMutation({
     mutationFn: async (data: TransactionFormData) => {
       return await postData<TransactionFormData, TransactionFormResponseData>(
         "/transactions/",
@@ -65,12 +82,30 @@ const Page: NextPage = () => {
     },
   });
 
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: async (data: TransactionFormData) => {
+      return await putData<TransactionFormData, TransactionFormResponseData>(
+        `/transactions/${transactionId}`,
+        data
+      );
+    },
+    onSuccess: (data) => {
+      console.log("Successfully updated transaction: ", data);
+      navigation.push("/dashboard/transaction-management");
+    },
+    onError: (error: AxiosError<BackendErrorResponse>) => {
+      const message = error?.response?.data?.error || error.message;
+      setErrorMessage(message);
+    },
+  });
+
   const categoryOptions = [
     { text: "Food", icon: <></> },
     { text: "Transport", icon: <></> },
     { text: "Shopping", icon: <></> },
     { text: "Bills", icon: <></> },
-    { text: "rent", icon: <></> },
+    { text: "Rent", icon: <></> },
     { text: "Entertainment", icon: <></> },
     { text: "Others", icon: <></> },
   ];
@@ -132,11 +167,49 @@ const Page: NextPage = () => {
     undefined | BudgetData
   >();
 
+  // Populate form when editing
+  useEffect(() => {
+    if (transactionData && isEditMode) {
+      reset({
+        title: transactionData.title,
+        type: transactionData.type,
+        amount: transactionData.amount,
+        transactionDate: new Date(transactionData.transactionDate)
+          .toISOString()
+          .split("T")[0],
+        category: transactionData.category,
+        paymentMethod: transactionData.paymentMethod,
+        description: transactionData.description || "",
+        tags: transactionData.tags || [],
+        note: transactionData.note || "",
+      });
+
+      // Update selected category
+      const category = categoryOptions.find(
+        (opt) => opt.text === transactionData.category
+      );
+      if (category) setSelectedCategory(category);
+
+      // Update selected payment method
+      const payment = paymentOptions.find(
+        (opt) => opt.text === transactionData.paymentMethod
+      );
+      if (payment) setSelectedPaymentMethod(payment);
+
+      // Update selected tags
+      if (transactionData.tags) setSelectedTags(transactionData.tags);
+    }
+  }, [transactionData, isEditMode, reset]);
+
   const onSubmit = (data: TransactionFormData) => {
     data.transactionDate = new Date(data.transactionDate).toISOString();
     console.log(data);
 
-    mutation.mutate(data);
+    if (isEditMode) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
   };
   useEffect(() => {
     // Check if budgetData exists and has the selected category
@@ -159,26 +232,31 @@ const Page: NextPage = () => {
 
   useEffect(() => {
     console.log(accountData?.data[0].balance);
-    if (type === "expense") {
-      setAfterTransactionBalance(0);
-      setAfterTransactionBalance(
-        (accountData?.data[0].balance as number) - parseFloat(amount.toString())
-      );
-    } else {
-      setAfterTransactionBalance(0);
+    const baseBalance = (accountData?.data[0].balance as number) || 0;
+    const amountValue = parseFloat(amount.toString()) || 0; // ADD || 0 here
 
-      setAfterTransactionBalance(
-        (accountData?.data[0].balance as number) + parseFloat(amount.toString())
-      );
+    if (type === "expense") {
+      setAfterTransactionBalance(baseBalance - amountValue);
+    } else {
+      setAfterTransactionBalance(baseBalance + amountValue);
     }
   }, [accountData?.data, amount, type]);
+
+  if (isEditMode && isLoadingTransaction) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="font-nunitosans text-body">Loading transaction...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-row gap-md mr-[32px]">
+    <div className="flex flex-row gap-md mt-8 mr-[32px]">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-lg"
       >
-        <h1 className="font-sansation mt-8 font-bold text-heading text-text-1000 leading-[130%]">
+        <h1 className="font-sansation font-bold text-heading text-text-1000 leading-[130%]">
           Transaction Details
         </h1>
 
@@ -221,7 +299,7 @@ const Page: NextPage = () => {
                     id="expenses"
                     className="hidden peer"
                     {...register("type")}
-                    defaultChecked
+                    // defaultChecked
                   />
                   <label
                     htmlFor="expenses"
@@ -506,7 +584,11 @@ const Page: NextPage = () => {
             disabled={isSubmitting}
             className="font-nunitosans font-bold text-text-100 text-body py-xs px-md rounded-sm bg-primary-500 hover:bg-primary-600 active:bg-primary-800 shadow-effect-2 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Saving..." : "Save Transaction"}
+            {isSubmitting
+              ? "Saving..."
+              : isEditMode
+              ? "Update Transaction"
+              : "Save Transaction"}
           </button>
           <button
             type="button"
