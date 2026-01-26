@@ -63,7 +63,8 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
           type === "expense" ? "text-red-600" : "text-green-600"
         } leading-[130%] py-xs`}
       >
-        {type === "expense" ? "- " : "+ "}${amount}
+        {type === "expense" ? "- " : "+ "}
+        {amount}
       </td>
       <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs">
         <div className="flex-1 flex flex-row gap-lg justify-start">

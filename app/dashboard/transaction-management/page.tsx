@@ -114,6 +114,7 @@ const Page: NextPage = ({}) => {
         {budgetData?.map((budget, index) => (
           <BudgetAlertCard
             key={index}
+            id={budget._id}
             budgetAmount={budget.budgetAmount}
             spentAmount={budget.spentAmount}
             category={budget.category}
@@ -180,7 +181,7 @@ const Page: NextPage = ({}) => {
                     Type
                   </td>
                   <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs">
-                    Amount
+                    Amount (Rs)
                   </td>
                   <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs">
                     Actions

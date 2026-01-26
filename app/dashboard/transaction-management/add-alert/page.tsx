@@ -2,20 +2,36 @@
 import DropDown from "@/component/DropDown";
 import Input from "@/component/Input";
 import { BackendErrorResponse, BudgetFormResponseData } from "@/types/type";
-import { getData, postData } from "@/utils/request";
+import { getData, postData, putData } from "@/utils/request";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-// interface Props {}
 type BudgetFormData = {
   category: string;
   budgetAmount: number;
   alertThreshold: number;
 };
+
+type BudgetDetail = {
+  _id: string;
+  userId: string;
+  category: string;
+  budgetAmount: number;
+  spentAmount: number;
+  alertThreshold: number;
+  month: Date;
+  isActive: boolean;
+};
+
+type BudgetDetailResponse = {
+  message: string;
+  data: BudgetDetail;
+};
+
 type TotalSpendData = {
   startDate: string;
   endDate: string;
@@ -33,11 +49,16 @@ const Page: NextPage = ({}) => {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [spendingPercentage, setSpendingPercentage] = useState<number>(0);
   const navigation = useRouter();
+  const searchParams = useSearchParams();
+  const budgetId = searchParams.get("id");
+  const isEditMode = !!budgetId;
+
   const {
     register,
     handleSubmit,
     control,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<BudgetFormData>({
     defaultValues: {
@@ -46,28 +67,9 @@ const Page: NextPage = ({}) => {
       alertThreshold: 70,
     },
   });
-  // eslint-disable-next-line react-hooks/incompatible-library
+
   const budgetAmt = watch("budgetAmount");
   const category = watch("category");
-
-  const mutation = useMutation({
-    mutationFn: async (data: BudgetFormData) => {
-      return await postData<BudgetFormData, BudgetFormResponseData>(
-        "/budgets/",
-        data
-      );
-    },
-    onSuccess: (data) => {
-      console.log("sucessfully send form data: ", data);
-      navigation.push("/dashboard/transaction-management");
-    },
-
-    onError: (error: AxiosError<BackendErrorResponse>) => {
-      const message = error?.response?.data?.error || error.message;
-      setErrorMessage(message);
-      console.log("error in form data post: ", message);
-    },
-  });
 
   const categoryOptions = [
     { text: "Food", icon: <></> },
@@ -78,16 +80,71 @@ const Page: NextPage = ({}) => {
     { text: "Entertainment", icon: <></> },
     { text: "Others", icon: <></> },
   ];
+
   const defaultCategorySelectedOption = {
     text: "Select Category",
     icon: <></>,
   };
+
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(
     defaultCategorySelectedOption
   );
 
-  // Move date calculations inside useMemo to prevent recreation on every render
+  // Fetch existing budget data if in edit mode
+  const { data: existingBudget, isLoading: isLoadingBudget } = useQuery({
+    queryKey: ["budget", budgetId],
+    queryFn: () => getData<null, BudgetDetailResponse>(`/budgets/${budgetId}`),
+    enabled: isEditMode,
+    select: (response) => response.data,
+  });
+
+  // Populate form when existing budget data is loaded
+  useEffect(() => {
+    if (existingBudget) {
+      const categoryOption =
+        categoryOptions.find(
+          (opt) =>
+            opt.text.toLowerCase() === existingBudget.category.toLowerCase()
+        ) || defaultCategorySelectedOption;
+
+      setSelectedCategory(categoryOption);
+
+      reset({
+        category: existingBudget.category,
+        budgetAmount: existingBudget.budgetAmount,
+        alertThreshold: existingBudget.alertThreshold,
+      });
+    }
+  }, [existingBudget, reset]);
+
+  // Mutation for creating or updating budget
+  const mutation = useMutation({
+    mutationFn: async (data: BudgetFormData) => {
+      if (isEditMode) {
+        return await putData<BudgetFormData, BudgetFormResponseData>(
+          `/budgets/${budgetId}`,
+          data
+        );
+      } else {
+        return await postData<BudgetFormData, BudgetFormResponseData>(
+          "/budgets/",
+          data
+        );
+      }
+    },
+    onSuccess: (data) => {
+      console.log("Successfully saved budget data: ", data);
+      navigation.push("/dashboard/transaction-management");
+    },
+    onError: (error: AxiosError<BackendErrorResponse>) => {
+      const message = error?.response?.data?.error || error.message;
+      setErrorMessage(message);
+      console.log("Error in form data post: ", message);
+    },
+  });
+
+  // Move date calculations inside useMemo
   const { startDate, endDate } = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -96,12 +153,12 @@ const Page: NextPage = ({}) => {
     const start = new Date(year, month, 1);
     const end = new Date(year, month + 1, 0);
 
-    // Format dates immediately
     return {
       startDate: start.toISOString().split("T")[0],
       endDate: end.toISOString().split("T")[0],
     };
-  }, []); // Empty dependency array - only calculate once
+  }, []);
+
   const { data: totalSpendingData, isLoading: isLoadingTotalSpendingData } =
     useQuery({
       queryKey: ["total-spend", category],
@@ -113,7 +170,7 @@ const Page: NextPage = ({}) => {
         ),
       enabled: !!category,
       select: (data) => {
-        console.log("total sepend data: ", data);
+        console.log("total spend data: ", data);
         return data.data;
       },
     });
@@ -130,6 +187,15 @@ const Page: NextPage = ({}) => {
     console.log(data);
     mutation.mutate(data);
   };
+
+  if (isEditMode && isLoadingBudget) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="font-nunitosans text-heading3">Loading budget data...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-row gap-md mt-8 mr-[32px]">
       <form
@@ -137,7 +203,7 @@ const Page: NextPage = ({}) => {
         className="flex-1 flex flex-col gap-lg"
       >
         <h1 className="font-sansation font-bold text-heading text-text-1000 leading-[130%]">
-          Budget Alert
+          {isEditMode ? "Edit Budget Alert" : "Budget Alert"}
         </h1>
 
         <p className="font-nunitosans text-body text-red-700 font-bold">
@@ -214,7 +280,6 @@ const Page: NextPage = ({}) => {
                   message: "Alert Threshold can't be greater than 100.",
                 },
                 min: {
-                  // Add this
                   value: 0,
                   message: "Alert Threshold can't be negative.",
                 },
@@ -238,7 +303,11 @@ const Page: NextPage = ({}) => {
             disabled={isSubmitting}
             className="font-nunitosans font-bold text-text-100 text-body py-xs px-md rounded-sm bg-primary-500 hover:bg-primary-600 active:bg-primary-800 shadow-effect-2 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Saving..." : "Save Budget "}
+            {isSubmitting
+              ? "Saving..."
+              : isEditMode
+              ? "Update Budget"
+              : "Save Budget"}
           </button>
           <button
             type="button"
@@ -261,11 +330,9 @@ const Page: NextPage = ({}) => {
             Important Note
           </h1>
           <p className="font-nunitosans text-body text-text-1000 leading-[110%]">
-            Once activated, your budget alert will begin tracking expenses from
-            the current month. Any spending prior to activation will not be
-            included in the initial calculation, but future transactions will be
-            monitored against your set limits. you&apos;ll receive real-time
-            updates to help you stay on track.
+            {isEditMode
+              ? "When you update your budget alert, the changes will apply immediately. Your spending history will remain the same, but future transactions will be tracked against the new limits you set."
+              : "Once activated, your budget alert will begin tracking expenses from the current month. Any spending prior to activation will not be included in the initial calculation, but future transactions will be monitored against your set limits. You'll receive real-time updates to help you stay on track."}
           </p>
         </div>
         {/* preview */}
