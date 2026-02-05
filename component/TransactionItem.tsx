@@ -12,9 +12,10 @@ type TransactionItemProps = {
   transactionDate: Date;
   type: string;
   amount: number;
-  onClick: () => void;
-  onDelete: () => void;
-  isSelected: boolean;
+  onClick?: () => void;
+  onDelete?: () => void;
+  isSelected?: boolean;
+  action?: boolean;
 };
 
 const TransactionItem: React.FC<TransactionItemProps> = ({
@@ -24,9 +25,10 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
   transactionDate,
   type,
   amount,
-  onDelete,
-  onClick,
-  isSelected,
+  onDelete = () => {},
+  onClick = () => {},
+  isSelected = false,
+  action = true,
 }: TransactionItemProps) => {
   const router = useRouter();
   const date = new Date(transactionDate);
@@ -66,36 +68,38 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
         {type === "expense" ? "- " : "+ "}
         {amount}
       </td>
-      <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs">
-        <div className="flex-1 flex flex-row gap-lg justify-start">
-          <button
-            className="cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(
-                `/dashboard/transaction-management/add-transaction?id=${_id}`
-              );
-            }}
-          >
-            <EditIcon className="w-[18px] h-[18px] text-text-600" />
-          </button>
-          <button
-            className="cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (
-                window.confirm(
-                  "Are you sure you want to delete this transaction?"
-                )
-              ) {
-                onDelete();
-              }
-            }}
-          >
-            <DeleteIcon className="w-[18px] h-[18px] text-text-600" />
-          </button>
-        </div>
-      </td>
+      {action && (
+        <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs">
+          <div className="flex-1 flex flex-row gap-lg justify-start">
+            <button
+              className="cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(
+                  `/dashboard/transaction-management/add-transaction?id=${_id}`,
+                );
+              }}
+            >
+              <EditIcon className="w-[18px] h-[18px] text-text-600" />
+            </button>
+            <button
+              className="cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (
+                  window.confirm(
+                    "Are you sure you want to delete this transaction?",
+                  )
+                ) {
+                  onDelete();
+                }
+              }}
+            >
+              <DeleteIcon className="w-[18px] h-[18px] text-text-600" />
+            </button>
+          </div>
+        </td>
+      )}
     </tr>
   );
 };

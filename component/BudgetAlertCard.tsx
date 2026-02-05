@@ -6,11 +6,13 @@ export function BudgetAlertCard({
   spentAmount,
   budgetAmount,
   category,
+  alertThreshold,
 }: {
   id: string;
   spentAmount: number;
   budgetAmount: number;
   category: string;
+  alertThreshold: number;
 }) {
   const navigation = useRouter();
   const percentage = Math.min((spentAmount / budgetAmount) * 100, 100);
@@ -39,7 +41,7 @@ export function BudgetAlertCard({
       </div>
       <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
         <div
-          className={`h-1 rounded-full bg-secondary-400`}
+          className={`h-1 rounded-full ${percentage < alertThreshold ? "bg-secondary-400" : percentage < 100 ? "bg-yellow-400" : "bg-red-400"}`}
           style={{ width: `${percentage}%` }}
         ></div>
       </div>

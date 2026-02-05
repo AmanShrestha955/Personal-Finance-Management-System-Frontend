@@ -24,14 +24,14 @@ const DropDown = <T extends OptionWithIcon | OptionWithoutIcon>({
           onToggle();
         }}
       >
-        {"icon" in selectedOption && selectedOption.icon}
+        {"icon" in selectedOption && <selectedOption.icon />}
         <p className="flex-1 font-nunitosans font-medium leading-[130%] text-text-1000 text-body text-left">
           {selectedOption.text}
         </p>
         <DropDownIcon width={16} height={16} rotate={isOpen ? 90 : 0} />
       </button>
       {isOpen && (
-        <div className="flex flex-col gap-0 w-full bg-card-100 rounded-sm shadow-effect-2 absolute top-[120%] left-0">
+        <div className="flex flex-col gap-0 w-full bg-card-100 rounded-sm shadow-effect-2 absolute top-[120%] left-0 z-10">
           {options.map((option, index) => {
             return (
               <div
@@ -40,14 +40,14 @@ const DropDown = <T extends OptionWithIcon | OptionWithoutIcon>({
                   index === 0
                     ? "rounded-t-sm"
                     : index === options.length - 1
-                    ? "rounded-b-sm"
-                    : ""
+                      ? "rounded-b-sm"
+                      : ""
                 } cursor-pointer transition-all duration-200`}
                 onClick={() => {
                   onPressOption(index);
                 }}
               >
-                {"icon" in option && option.icon}
+                {"icon" in option && <option.icon />}
                 <p className="flex-1 font-bold font-nunitosans text-text-1000 text-body leading-[130%]">
                   {option.text}
                 </p>

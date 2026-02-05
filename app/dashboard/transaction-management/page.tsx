@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteData, getData } from "@/utils/request";
-import { BlockList } from "net";
 import { AxiosError } from "axios";
 type TransactionData = {
   message: string;
@@ -118,6 +117,7 @@ const Page: NextPage = ({}) => {
             budgetAmount={budget.budgetAmount}
             spentAmount={budget.spentAmount}
             category={budget.category}
+            alertThreshold={budget.alertThreshold}
           />
         ))}
       </div>
@@ -158,7 +158,7 @@ const Page: NextPage = ({}) => {
                 className="flex flex-row rounded-sm bg-primary-500 items-center gap-sm text-text-100 px-sm py-xxs shadow-effect-2 cursor-pointer hover:bg-primary-600 transition-all duration-300"
                 onClick={() =>
                   router.push(
-                    "/dashboard/transaction-management/add-transaction"
+                    "/dashboard/transaction-management/add-transaction",
                   )
                 }
               >

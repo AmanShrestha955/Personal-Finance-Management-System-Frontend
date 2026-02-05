@@ -1,21 +1,10 @@
 "use client";
 import DropDown from "@/component/DropDown";
-import TagIcon from "@/component/icons/tag";
 import Input from "@/component/Input";
-import Tag from "@/component/Tag";
-import {
-  AccountResponseData,
-  AllBudgetResponseData,
-  BackendErrorResponse,
-  BudgetData,
-  TransactionFormData,
-  TransactionFormResponseData,
-} from "@/types/type";
-import { getData, postData, putData } from "@/utils/request";
+import { BackendErrorResponse } from "@/types/type";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -84,7 +73,7 @@ const Page: NextPage = () => {
       return await updateSavingGoal(savingId as string, data);
     },
     onSuccess: (data) => {
-      console.log("Successfully updated transaction: ", data);
+      console.log("Successfully updated Saving: ", data);
       navigation.push("/dashboard/saving");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
@@ -285,7 +274,7 @@ const Page: NextPage = () => {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              navigation.push("/dashboard/transaction-management");
+              navigation.push("/dashboard/saving");
             }}
             className="font-nunitosans font-bold text-text-1000 text-body py-xs px-md rounded-sm border border-card-200 bg-card-100 hover:bg-card-200 active:bg-card-300 shadow-effect-2 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >

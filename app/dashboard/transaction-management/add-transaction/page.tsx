@@ -17,9 +17,11 @@ import { AxiosError } from "axios";
 import { NextPage } from "next";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
+import { categoryWithIcon } from "@/utils/category";
+import { OthersIcon } from "@/component/icons/CategoryIcons";
 
 const Page: NextPage = () => {
   const navigation = useRouter();
@@ -57,7 +59,7 @@ const Page: NextPage = () => {
     queryKey: ["transaction", transactionId],
     queryFn: () =>
       getData<null, { data: TransactionFormData & { _id: string } }>(
-        `/transactions/${transactionId}`
+        `/transactions/${transactionId}`,
       ),
     enabled: isEditMode,
     select: (response) => response.data,
@@ -67,7 +69,7 @@ const Page: NextPage = () => {
     mutationFn: async (data: TransactionFormData) => {
       return await postData<TransactionFormData, TransactionFormResponseData>(
         "/transactions/",
-        data
+        data,
       );
     },
     onSuccess: (data) => {
@@ -87,7 +89,7 @@ const Page: NextPage = () => {
     mutationFn: async (data: TransactionFormData) => {
       return await putData<TransactionFormData, TransactionFormResponseData>(
         `/transactions/${transactionId}`,
-        data
+        data,
       );
     },
     onSuccess: (data) => {
@@ -100,22 +102,17 @@ const Page: NextPage = () => {
     },
   });
 
-  const categoryOptions = [
-    { text: "Food", icon: <></> },
-    { text: "Transport", icon: <></> },
-    { text: "Shopping", icon: <></> },
-    { text: "Bills", icon: <></> },
-    { text: "Rent", icon: <></> },
-    { text: "Entertainment", icon: <></> },
-    { text: "Others", icon: <></> },
-  ];
-  const defaultCategorySelectedOption = {
+  const categoryOptions = categoryWithIcon;
+  const defaultCategorySelectedOption: {
+    text: string;
+    icon: React.ComponentType;
+  } = {
     text: "Select Category",
-    icon: <></>,
+    icon: OthersIcon,
   };
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(
-    defaultCategorySelectedOption
+    defaultCategorySelectedOption,
   );
 
   const paymentOptions = [
@@ -127,7 +124,7 @@ const Page: NextPage = () => {
   const defaultPaymentSelectedOption = { text: "Select Payment Method" };
   const [isPaymentDropdownOpen, setIsPaymentDropdownOpen] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    defaultPaymentSelectedOption
+    defaultPaymentSelectedOption,
   );
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -161,7 +158,7 @@ const Page: NextPage = () => {
 
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [afterTransactionBalance, setAfterTransactionBalance] = useState(
-    (accountData?.data[0].balance as number) || 0
+    (accountData?.data[0].balance as number) || 0,
   );
   const [selectedBudget, setSelectedBudget] = useState<
     undefined | BudgetData
@@ -186,13 +183,13 @@ const Page: NextPage = () => {
 
       // Update selected category
       const category = categoryOptions.find(
-        (opt) => opt.text === transactionData.category
+        (opt) => opt.text === transactionData.category,
       );
       if (category) setSelectedCategory(category);
 
       // Update selected payment method
       const payment = paymentOptions.find(
-        (opt) => opt.text === transactionData.paymentMethod
+        (opt) => opt.text === transactionData.paymentMethod,
       );
       if (payment) setSelectedPaymentMethod(payment);
 
@@ -215,13 +212,13 @@ const Page: NextPage = () => {
     // Check if budgetData exists and has the selected category
     setSelectedBudget(
       budgetData?.data?.find(
-        (budget) => budget.category === selectedCategory.text
-      )
+        (budget) => budget.category === selectedCategory.text,
+      ),
     );
     console.log(
       budgetData?.data?.find(
-        (budget) => budget.category === selectedCategory.text
-      )
+        (budget) => budget.category === selectedCategory.text,
+      ),
     );
   }, [budgetData?.data, selectedCategory]);
 
@@ -587,8 +584,8 @@ const Page: NextPage = () => {
             {isSubmitting
               ? "Saving..."
               : isEditMode
-              ? "Update Transaction"
-              : "Save Transaction"}
+                ? "Update Transaction"
+                : "Save Transaction"}
           </button>
           <button
             type="button"
@@ -622,10 +619,10 @@ const Page: NextPage = () => {
               selectedBudget.alertThreshold
                 ? "border-green-400 bg-green-200 text-green-600"
                 : (selectedBudget.spentAmount / selectedBudget.budgetAmount) *
-                    100 <
-                  100
-                ? "border-yellow-400 bg-yellow-200 text-yellow-600"
-                : "border-red-400 bg-red-200 text-red-600"
+                      100 <
+                    100
+                  ? "border-yellow-400 bg-yellow-200 text-yellow-600"
+                  : "border-red-400 bg-red-200 text-red-600"
             }`}
           >
             <h4 className="font-nunitosans font-bold  text-heading3">

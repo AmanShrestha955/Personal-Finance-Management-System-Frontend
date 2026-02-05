@@ -1,5 +1,12 @@
 import { JSX } from "react";
 
+export type TimeOptionsDataType =
+  | "This Week"
+  | "This Month"
+  | "Last 3 Months"
+  | "Last 6 Months"
+  | "This Year";
+
 export type SignInForm = {
   email: string;
   password: string;
@@ -39,7 +46,7 @@ export type TransactionDetail = {
   tags?: string[];
 };
 
-export type OptionWithIcon = { text: string; icon: JSX.Element };
+export type OptionWithIcon = { text: string; icon: React.ComponentType };
 export type OptionWithoutIcon = { text: string };
 export type DropDownProps<T> = {
   options: T[];
@@ -51,7 +58,7 @@ export type DropDownProps<T> = {
 
 export type TransactionFormData = {
   title: string;
-  type: "expense" | "income";
+  type: TransactionType;
   amount: number;
   transactionDate: string;
   category: string;
@@ -92,3 +99,18 @@ export type BudgetFormResponseData = {
   message: string;
   data: BudgetData;
 };
+
+export type Category =
+  | "Food & Dining"
+  | "Transport"
+  | "Shopping"
+  | "Bills & Utilities"
+  | "Rent/Housing"
+  | "Entertainment"
+  | "Healthcare"
+  | "Personal Care"
+  | "Savings"
+  | "Education"
+  | "Others";
+
+export type TransactionType = "expense" | "income";
