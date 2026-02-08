@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteData, getData } from "@/utils/request";
 import { AxiosError } from "axios";
+import { getBudgets } from "@/utils/statisticsApi";
 type TransactionData = {
   message: string;
   data: TransactionDetail[];
@@ -52,8 +53,10 @@ const Page: NextPage = ({}) => {
     error: budgetDataError,
   } = useQuery({
     queryKey: ["budgets"],
-    queryFn: () => getData<null, BudgetData>("/budgets/"),
-    select: (response) => response.data,
+    queryFn: async () => {
+      const response = await getBudgets();
+      return response;
+    },
   });
 
   const onClickTransactionItem = (transaction: TransactionDetail) => {

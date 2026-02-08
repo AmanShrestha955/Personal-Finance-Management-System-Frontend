@@ -1,6 +1,6 @@
 "use client";
+import { ExpenseTimelineItem } from "@/utils/homeApi";
 import {
-  Bar,
   LineChart,
   Tooltip,
   XAxis,
@@ -8,28 +8,24 @@ import {
   ResponsiveContainer,
   Legend,
   Line,
-  CartesianGrid,
 } from "recharts";
 
-type ExpenseTrend = {
-  week?: string;
-  month?: string;
-  day?: string;
-  expences: number;
-  //   income: number;
-};
-export default function ExpenseTrendCard({ data }: { data: ExpenseTrend[] }) {
+export default function ExpenseTrendCard({
+  data,
+}: {
+  data: ExpenseTimelineItem[];
+}) {
   return (
     <ResponsiveContainer width="100%" height={390} className={`z-20`}>
       <LineChart data={data}>
         {data.some((item) => "day" in item) && (
-          <XAxis dataKey="day" stroke="black" fontSize={16} />
+          <XAxis dataKey="day" stroke="black" fontSize={16} label={"day"} />
         )}
         {data.some((item) => "week" in item) && (
-          <XAxis dataKey="week" stroke="black" fontSize={16} />
+          <XAxis dataKey="week" stroke="black" fontSize={16} label={"week"} />
         )}
         {data.some((item) => "month" in item) && (
-          <XAxis dataKey="month" stroke="black" fontSize={16} />
+          <XAxis dataKey="month" stroke="black" fontSize={16} label={"month"} />
         )}
         <YAxis
           stroke="black"
@@ -41,7 +37,7 @@ export default function ExpenseTrendCard({ data }: { data: ExpenseTrend[] }) {
         <Legend />
         {/* <CartesianGrid stroke="#ccc" strokeDasharray="4 4" /> */}
         <Line
-          dataKey="expences"
+          dataKey="amount"
           stroke="#007A8C"
           type={"monotone"}
           strokeWidth={3}

@@ -1,4 +1,5 @@
 "use client";
+import { IncomeVsExpensesItem } from "@/utils/statisticsApi";
 import {
   Bar,
   BarChart,
@@ -8,18 +9,10 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-
-type IncomeVsExpenses = {
-  week?: string;
-  month?: string;
-  day?: string;
-  expences: number;
-  income: number;
-};
 export default function IncomeVsExpenses({
   data,
 }: {
-  data: IncomeVsExpenses[];
+  data: IncomeVsExpensesItem[];
 }) {
   return (
     <ResponsiveContainer width="100%" height={390} className={`z-20`}>

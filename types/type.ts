@@ -114,3 +114,17 @@ export type Category =
   | "Others";
 
 export type TransactionType = "expense" | "income";
+
+export type TimeFilter =
+  | {
+      key: "week";
+      timeRange: "1";
+    }
+  | {
+      key: "month";
+      timeRange: "1" | "3" | "6";
+    }
+  | {
+      key: "year";
+      timeRange: "1";
+    };

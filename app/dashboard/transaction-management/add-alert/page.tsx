@@ -1,7 +1,9 @@
 "use client";
 import DropDown from "@/component/DropDown";
+import { OthersIcon } from "@/component/icons/CategoryIcons";
 import Input from "@/component/Input";
 import { BackendErrorResponse, BudgetFormResponseData } from "@/types/type";
+import { categoryWithIcon } from "@/utils/category";
 import { getData, postData, putData } from "@/utils/request";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -71,24 +73,19 @@ const Page: NextPage = ({}) => {
   const budgetAmt = watch("budgetAmount");
   const category = watch("category");
 
-  const categoryOptions = [
-    { text: "Food", icon: <></> },
-    { text: "Transport", icon: <></> },
-    { text: "Shopping", icon: <></> },
-    { text: "Bills", icon: <></> },
-    { text: "Rent", icon: <></> },
-    { text: "Entertainment", icon: <></> },
-    { text: "Others", icon: <></> },
-  ];
+  const categoryOptions = categoryWithIcon;
 
-  const defaultCategorySelectedOption = {
+  const defaultCategorySelectedOption: {
+    text: string;
+    icon: React.ComponentType;
+  } = {
     text: "Select Category",
-    icon: <></>,
+    icon: OthersIcon,
   };
 
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(
-    defaultCategorySelectedOption
+    defaultCategorySelectedOption,
   );
 
   // Fetch existing budget data if in edit mode
@@ -105,7 +102,7 @@ const Page: NextPage = ({}) => {
       const categoryOption =
         categoryOptions.find(
           (opt) =>
-            opt.text.toLowerCase() === existingBudget.category.toLowerCase()
+            opt.text.toLowerCase() === existingBudget.category.toLowerCase(),
         ) || defaultCategorySelectedOption;
 
       setSelectedCategory(categoryOption);
@@ -124,12 +121,12 @@ const Page: NextPage = ({}) => {
       if (isEditMode) {
         return await putData<BudgetFormData, BudgetFormResponseData>(
           `/budgets/${budgetId}`,
-          data
+          data,
         );
       } else {
         return await postData<BudgetFormData, BudgetFormResponseData>(
           "/budgets/",
-          data
+          data,
         );
       }
     },
@@ -166,7 +163,7 @@ const Page: NextPage = ({}) => {
         getData<null, TotalSpendResponseData>(
           `/transactions/analytics/total-spend?startDate=${startDate}&endDate=${endDate}${
             category ? "&category=" + category : ""
-          }`
+          }`,
         ),
       enabled: !!category,
       select: (data) => {
@@ -306,8 +303,8 @@ const Page: NextPage = ({}) => {
             {isSubmitting
               ? "Saving..."
               : isEditMode
-              ? "Update Budget"
-              : "Save Budget"}
+                ? "Update Budget"
+                : "Save Budget"}
           </button>
           <button
             type="button"

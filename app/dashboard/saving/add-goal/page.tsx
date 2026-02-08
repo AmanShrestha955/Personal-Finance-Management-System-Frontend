@@ -15,6 +15,8 @@ import {
   getSavingGoalById,
   updateSavingGoal,
 } from "@/utils/savingGoalApi";
+import { categoryWithIcon } from "@/utils/category";
+import { OthersIcon } from "@/component/icons/CategoryIcons";
 
 const Page: NextPage = () => {
   const navigation = useRouter();
@@ -82,18 +84,13 @@ const Page: NextPage = () => {
     },
   });
 
-  const categoryOptions = [
-    { text: "Food", icon: <></> },
-    { text: "Transport", icon: <></> },
-    { text: "Shopping", icon: <></> },
-    { text: "Bills", icon: <></> },
-    { text: "Rent", icon: <></> },
-    { text: "Entertainment", icon: <></> },
-    { text: "Others", icon: <></> },
-  ];
-  const defaultCategorySelectedOption = {
+  const categoryOptions = categoryWithIcon;
+  const defaultCategorySelectedOption: {
+    text: string;
+    icon: React.ComponentType;
+  } = {
     text: "Select Category",
-    icon: <></>,
+    icon: OthersIcon,
   };
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(

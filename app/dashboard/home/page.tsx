@@ -5,7 +5,7 @@ import DropDown from "@/component/DropDown";
 import ExpencesCard from "@/component/ExpencesCard";
 import PieChartComponent from "@/component/PieChartComponent";
 import TransactionItem from "@/component/TransactionItem";
-import { Category, TimeOptionsDataType, TransactionType } from "@/types/type";
+import { TimeOptionsDataType, TransactionType } from "@/types/type";
 import { categoryColors, categoryIcons } from "@/utils/category";
 import { NextPage } from "next";
 import { useEffect, useState } from "react";
@@ -17,7 +17,6 @@ import {
   getTop5Expenses,
   TimeFilter,
 } from "@/utils/homeApi";
-import { set } from "react-hook-form";
 
 const Page: NextPage = ({}) => {
   const currentDate = new Date();

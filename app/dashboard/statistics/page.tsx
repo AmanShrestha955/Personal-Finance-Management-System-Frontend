@@ -1,26 +1,36 @@
 "use client";
 import ExpenseTrendCard from "@/component/ExpenseTrendCard";
-import {
-  HealthcareIcon,
-  RentHousingIcon,
-} from "@/component/icons/CategoryIcons";
+import { HealthcareIcon } from "@/component/icons/CategoryIcons";
 import DropDownIcon from "@/component/icons/dropdown";
 import IncomeVsExpenses from "@/component/IncomeVsExpencesCard";
 import TransactionItem from "@/component/TransactionItem";
-import { TimeOptionsDataType } from "@/types/type";
+import { TimeFilter, TimeOptionsDataType } from "@/types/type";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Download, FileText, Goal, TrendingUp } from "lucide-react";
 import { NextPage } from "next";
 import { useState } from "react";
+import {
+  getMoneyHighlights,
+  getExpensesByTimePeriod,
+  getFinancialHealthMetrics,
+  getIncomeExpenseComparison,
+  getRecentMonthTransactions,
+  getBudgets,
+  getSavingGoals,
+} from "@/utils/statisticsApi";
+import { categoryColors, categoryIcons } from "@/utils/category";
 
 // interface Props {}
 
 const Page: NextPage = ({}) => {
-  const contributionData = [
-    { name: "Savings Rate", percentage: 65 },
-    { name: "Spending Control", percentage: 75 },
-    { name: "Budget Adherence", percentage: 90 },
-  ];
-  const percentage = 50;
+  const quaryClient = useQueryClient();
+  const financialHealthMessages: Record<string, string> = {
+    Excellent: "Outstanding! Your financial health is excellent.",
+    Good: "Your financial health is in good shape! Keep up the great work.",
+    Fair: "Your financial health needs attention. Small changes can help.",
+    "Needs Improvement":
+      "Your financial health needs urgent care. Let's fix it together.",
+  };
   const alertThreshold = 70;
   const timeOptions: { text: TimeOptionsDataType }[] = [
     { text: "This Week" },
@@ -29,52 +39,90 @@ const Page: NextPage = ({}) => {
     { text: "Last 6 Months" },
     { text: "This Year" },
   ];
-  const [selectedTimeOption, setSelectedTimeOption] = useState({
+
+  const timeOptionsData: Record<TimeOptionsDataType, TimeFilter> = {
+    "This Week": { key: "week", timeRange: "1" },
+    "This Month": { key: "month", timeRange: "1" },
+    "Last 3 Months": { key: "month", timeRange: "3" },
+    "Last 6 Months": { key: "month", timeRange: "6" },
+    "This Year": { key: "year", timeRange: "1" },
+  } as const;
+
+  const [selectedTimeOption, setSelectedTimeOption] = useState<{
+    text: TimeOptionsDataType;
+  }>({
     text: "This Month",
   });
+  const [period, setPeriod] = useState(selectedTimeOption.text);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
-  const recentTransactionsData = [
-    {
-      _id: "1",
-      title: "hello",
-      category: "rent",
-      transactionDate: new Date(),
-      type: "expense",
-      amount: 394,
+
+  const { data: moneyHighlightsData } = useQuery({
+    queryKey: ["money-highlights"],
+    queryFn: async () => {
+      const response = await getMoneyHighlights(selectedTimeOption.text);
+      return response;
     },
-    {
-      _id: "1",
-      title: "hello",
-      category: "rent",
-      transactionDate: new Date(),
-      type: "expense",
-      amount: 394,
+  });
+  const { data: ExpensesByTime } = useQuery({
+    queryKey: ["expenses-data"],
+    queryFn: async () => {
+      const props =
+        timeOptionsData[selectedTimeOption.text as TimeOptionsDataType];
+      const response = await getExpensesByTimePeriod(props, "expense");
+      return response;
     },
-    {
-      _id: "1",
-      title: "hello",
-      category: "rent",
-      transactionDate: new Date(),
-      type: "expense",
-      amount: 394,
+  });
+
+  const { data: incomeExpenseComparisonData } = useQuery({
+    queryKey: ["income-vs-expenses"],
+    queryFn: async () => {
+      const response = await getIncomeExpenseComparison(
+        timeOptionsData[selectedTimeOption.text],
+      );
+      return response;
     },
-    {
-      _id: "1",
-      title: "hello",
-      category: "rent",
-      transactionDate: new Date(),
-      type: "expense",
-      amount: 394,
+  });
+
+  const {
+    data: recentTransactionsData,
+    // isLoading: isRecentTransactionsLoading,
+    // isError: isRecentTransactionsError,
+  } = useQuery({
+    queryKey: ["recentTransactions"],
+    queryFn: async () => {
+      const response = await getRecentMonthTransactions();
+      return response;
     },
-    {
-      _id: "1",
-      title: "hello",
-      category: "rent",
-      transactionDate: new Date(),
-      type: "expense",
-      amount: 394,
+  });
+  const { data: savingGoals } = useQuery({
+    queryKey: ["saving-goals"],
+    queryFn: () => getSavingGoals(),
+  });
+  const { data: budgetData, isLoading: isBudgetDataLoading } = useQuery({
+    queryKey: ["budgets"],
+    queryFn: async () => {
+      const response = await getBudgets();
+      return response;
     },
-  ];
+  });
+  const { data: financialHealth } = useQuery({
+    queryKey: ["financial-health"],
+    queryFn: async () => {
+      const response = await getFinancialHealthMetrics();
+      return response;
+    },
+  });
+
+  const onApplyFilters = () => {
+    quaryClient.invalidateQueries({ queryKey: ["income-vs-expenses"] });
+    quaryClient.invalidateQueries({ queryKey: ["expenses-data"] });
+    quaryClient.invalidateQueries({ queryKey: ["money-highlights"] });
+    quaryClient.refetchQueries({ queryKey: ["expenses-data"] });
+    quaryClient.refetchQueries({ queryKey: ["money-highlights"] });
+    quaryClient.refetchQueries({ queryKey: ["income-vs-expenses"] });
+    setPeriod(selectedTimeOption.text);
+  };
+
   return (
     <div className="w-full overflow-y-auto py-2xl px-xl flex flex-col gap-md bg-background-100 ">
       <h1 className="font-sansation text-heading font-semibold mb-md">
@@ -148,7 +196,10 @@ const Page: NextPage = ({}) => {
             )}
           </div>
         </div>
-        <button className="py-xs px-md rounded-full bg-secondary-500 text-text-100 text-body cursor-pointer hover:bg-secondary-600 transition-all duration-75">
+        <button
+          onClick={onApplyFilters}
+          className="py-xs px-md rounded-full bg-secondary-500 text-text-100 text-body cursor-pointer hover:bg-secondary-600 transition-all duration-75"
+        >
           Apply Filters
         </button>
       </div>
@@ -158,29 +209,51 @@ const Page: NextPage = ({}) => {
             <Calendar size={18} color="white" />
           </div>
           <p className="text-body font-nunitosans text-text-1000">
-            This Month&apos;s Money Highlights
+            {period}&apos;s Money Highlights
           </p>
         </div>
         <div className="flex flex-row gap-md">
           <div className="flex flex-1 flex-col p-md rounded-lg bg-background-100 gap-xxs font-nunitosans">
             <h1 className="text-text-800 text-body">Total Income</h1>
-            <h2 className="text-text-1000 text-body">Rs. 45,000</h2>
-            <p className="text-green-600 text-[14px]">+5% from last month</p>
+            <h2 className="text-text-1000 text-body">
+              {moneyHighlightsData?.totalIncome.formatted}
+            </h2>
+            <p
+              className={`${moneyHighlightsData?.totalIncome.change.color === "green" ? "text-green-600" : "text-red-600"} text-[14px]`}
+            >
+              {moneyHighlightsData?.totalIncome.change.value} from last month
+            </p>
           </div>
           <div className="flex flex-1 flex-col p-md rounded-lg bg-background-100 gap-xxs font-nunitosans">
-            <h1 className="text-text-800 text-body">Total Income</h1>
-            <h2 className="text-text-1000 text-body">Rs. 45,000</h2>
-            <p className="text-green-600 text-[14px]">+5% from last month</p>
+            <h1 className="text-text-800 text-body">Total Expenses</h1>
+            <h2 className="text-text-1000 text-body">
+              {moneyHighlightsData?.totalExpenses.formatted}
+            </h2>
+            <p
+              className={`${moneyHighlightsData?.totalExpenses.change.color === "green" ? "text-green-600" : "text-red-600"} text-[14px]`}
+            >
+              {moneyHighlightsData?.totalExpenses.change.value} from last month
+            </p>
           </div>
           <div className="flex flex-1 flex-col p-md rounded-lg bg-background-100 gap-xxs font-nunitosans">
-            <h1 className="text-text-800 text-body">Total Income</h1>
-            <h2 className="text-text-1000 text-body">Rs. 45,000</h2>
-            <p className="text-green-600 text-[14px]">+5% from last month</p>
+            <h1 className="text-text-800 text-body">Total Saving</h1>
+            <h2 className="text-text-1000 text-body">
+              {moneyHighlightsData?.totalSavings.formatted}
+            </h2>
+            <p
+              className={`${moneyHighlightsData?.totalSavings.change.color === "green" ? "text-green-600" : "text-red-600"} text-[14px]`}
+            >
+              {moneyHighlightsData?.totalSavings.change.value} of income
+            </p>
           </div>
           <div className="flex flex-1 flex-col p-md rounded-lg bg-background-100 gap-xxs font-nunitosans">
-            <h1 className="text-text-800 text-body">Total Income</h1>
-            <h2 className="text-text-1000 text-body">Rs. 45,000</h2>
-            <p className="text-green-600 text-[14px]">+5% from last month</p>
+            <h1 className="text-text-800 text-body">Transaction</h1>
+            <h2 className="text-text-1000 text-body">
+              {moneyHighlightsData?.transactions.count}
+            </h2>
+            <p className="text-text-600 text-[14px]">
+              {moneyHighlightsData?.transactions.period}
+            </p>
           </div>
         </div>
       </div>
@@ -188,29 +261,15 @@ const Page: NextPage = ({}) => {
         <div className="flex flex-col flex-1 gap-md">
           <div className="flex flex-col gap-lg p-2xl rounded-xl bg-card-100 shadow-effect-2 font-nunitosans">
             <h1 className="text-heading3 font-semibold text-text-1000 leading-[130%]">
-              Income vs Expense (Monthly)
+              Income vs Expense ({period})
             </h1>
-            <IncomeVsExpenses
-              data={[
-                { month: "jan", expences: 890, income: 1000 },
-                { month: "jan", expences: 890, income: 1000 },
-                { month: "jan", expences: 890, income: 1000 },
-                { month: "jan", expences: 890, income: 1000 },
-              ]}
-            />
+            <IncomeVsExpenses data={incomeExpenseComparisonData || []} />
           </div>
           <div className="flex flex-col gap-3xl p-lg rounded-xl shadow-effect-2 font-nunitosans">
             <h1 className="text-heading3 font-semibold text-text-1000 leading-[130%]">
-              Expense Trend (This Month)
+              Expense Trend ({period})
             </h1>
-            <ExpenseTrendCard
-              data={[
-                { month: "jan", expences: 304 },
-                { month: "jan", expences: 34 },
-                { month: "jan", expences: 400 },
-                { month: "jan", expences: 304 },
-              ]}
-            />
+            <ExpenseTrendCard data={ExpensesByTime || []} />
           </div>
           <div className="flex flex-col gap-xs p-lg rounded-md shadow-effect-2 bg-card-100">
             <h2 className="font-nunitosans text-heading3 font-semibold text-text-1000">
@@ -254,52 +313,93 @@ const Page: NextPage = ({}) => {
             </div>
             <div className="flex flex-row justify-center flex-wrap gap-lg">
               {/* card */}
-              <div className="flex flex-col p-lg rounded-xl shadow-effect-2 bg-card-100 gap-lg min-w-[440px]">
-                <div className="flex flex-row gap-sm">
-                  {/* icon */}
-                  <div className="w-[48px] h-[48px] flex justify-center items-center p-sm rounded-lg bg-primary-600">
-                    <RentHousingIcon className="text-white" />
+              {savingGoals &&
+                savingGoals.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col p-lg rounded-xl shadow-effect-2 bg-card-100 gap-lg min-w-[440px]"
+                  >
+                    <div className="flex flex-row gap-sm">
+                      {/* icon */}
+                      <div
+                        className={`w-[48px] h-[48px] flex justify-center items-center p-sm rounded-lg text-white `}
+                        style={{
+                          backgroundColor:
+                            categoryColors[
+                              item.category as keyof typeof categoryColors
+                            ] ?? "#008944",
+                        }}
+                      >
+                        {categoryIcons[
+                          item.category as keyof typeof categoryIcons
+                        ] ? (
+                          categoryIcons[
+                            item.category as keyof typeof categoryIcons
+                          ]({})
+                        ) : (
+                          <div></div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-0 items-start font-nunitosans">
+                        <p className="text-heading3 text-text-1000">
+                          {item.goalName}
+                        </p>
+                        <p className="text-body text-text-700 leading-[130%]">
+                          Rs.{" "}
+                          {item.currentSaving.toLocaleString("en-NP", {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          })}
+                          / Rs.{" "}
+                          {item.targetAmount.toLocaleString("en-NP", {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-xs">
+                      <div className="flex flex-row justify-between font-nunitosans">
+                        <p className="text-body text-text-8000 leading-[130%]">
+                          Progress
+                        </p>
+                        <p className="text-secondary-500 text-body leading-[130%]">
+                          {(item.currentSaving / item.targetAmount) * 100}%
+                        </p>
+                      </div>
+                      <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
+                        <div
+                          className={`h-1 rounded-full bg-green-600`}
+                          style={{
+                            width: `${(item.currentSaving / item.targetAmount) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-0 p-sm rounded-lg bg-background-100 font-nunitosans">
+                      <p className="text-text-1000 text-body leading-[130%]">
+                        Remaining Amount
+                      </p>
+                      <p className="text-text-1000 text-heading3 leading-[130%]">
+                        Rs.{" "}
+                        {(
+                          item.targetAmount - item.currentSaving
+                        ).toLocaleString("en-NP", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-0 p-sm rounded-lg bg-green-200 font-nunitosans">
+                      <p className="text-green-600 text-body leading-[130%]">
+                        At this pace, you&apos;ll reach your goal by
+                      </p>
+                      <p className="text-green-600 text-body font-bold leading-[130%]">
+                        March 2026
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-0 items-start font-nunitosans">
-                    <p className="text-heading3 text-text-1000">Laptop Fund</p>
-                    <p className="text-body text-text-700 leading-[130%]">
-                      Rs. 18,500 / Rs. 50,000
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex flex-row justify-between font-nunitosans">
-                    <p className="text-body text-text-8000 leading-[130%]">
-                      Progress
-                    </p>
-                    <p className="text-secondary-500 text-body leading-[130%]">
-                      37%
-                    </p>
-                  </div>
-                  <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
-                    <div
-                      className={`h-1 rounded-full ${percentage < alertThreshold ? "bg-secondary-400" : percentage < 100 ? "bg-yellow-400" : "bg-red-400"}`}
-                      style={{ width: `${percentage}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-0 p-sm rounded-lg bg-background-100 font-nunitosans">
-                  <p className="text-text-1000 text-body leading-[130%]">
-                    Remaining Amount
-                  </p>
-                  <p className="text-text-1000 text-heading3 leading-[130%]">
-                    Rs. 31,500
-                  </p>
-                </div>
-                <div className="flex flex-col gap-0 p-sm rounded-lg bg-green-200 font-nunitosans">
-                  <p className="text-green-600 text-body leading-[130%]">
-                    🎯 At this pace, you&apos;ll reach your goal by
-                  </p>
-                  <p className="text-green-600 text-body font-bold leading-[130%]">
-                    March 2026
-                  </p>
-                </div>
-              </div>
+                ))}
             </div>
           </div>
         </div>
@@ -315,84 +415,170 @@ const Page: NextPage = ({}) => {
             </div>
             <div className="flex flex-col gap-md">
               {/* card */}
-              {[1, 2, 3, 4, 5].map((item, index) => (
-                <div
-                  key={index}
-                  className="p-md bg-background-100 rounded-lg flex flex-col gap-sm"
-                >
-                  <div className="flex flex-row justify-between items-center">
-                    <div className="flex flex-row gap-sm items-center">
-                      {/* icon */}
-                      <div className="size-[40px] rounded-md bg-green-600"></div>
-                      <div className="flex flex-col">
-                        <p className="text-text-1000 text-body leading-[130%]">
-                          Groceries
-                        </p>
-                        <p className="text-text-700 text-body leading-[130%]">
-                          Rs. 8,500 / Rs.10,000
-                        </p>
+              {isBudgetDataLoading ? (
+                <div> loading ...</div>
+              ) : (
+                budgetData !== undefined &&
+                budgetData.map((item, index) => (
+                  <div
+                    key={index}
+                    className="p-md bg-background-100 rounded-lg flex flex-col gap-sm"
+                  >
+                    <div className="flex flex-row justify-between items-center">
+                      <div className="flex flex-row gap-sm items-center">
+                        {/* icon */}
+                        <div
+                          className="size-[40px] rounded-md justify-center items-center flex text-white"
+                          style={{
+                            backgroundColor:
+                              categoryColors[
+                                item.category as keyof typeof categoryColors
+                              ] ?? "#008944",
+                          }}
+                        >
+                          {categoryIcons[
+                            item.category as keyof typeof categoryIcons
+                          ] ? (
+                            categoryIcons[
+                              item.category as keyof typeof categoryIcons
+                            ]({})
+                          ) : (
+                            <div></div>
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          <p className="text-text-1000 text-body leading-[130%]">
+                            {item.category}
+                          </p>
+                          <p className="text-text-700 text-body leading-[130%]">
+                            Rs.{" "}
+                            {item.spentAmount.toLocaleString("en-NP", {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            })}{" "}
+                            / Rs.
+                            {item.budgetAmount.toLocaleString("en-NP", {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            })}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <h1 className="text-body font-semibold text-text-1000">
-                      50%
-                    </h1>
-                  </div>
-                  <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
-                    <div
-                      className={`h-1 rounded-full ${percentage < alertThreshold ? "bg-secondary-400" : percentage < 100 ? "bg-yellow-400" : "bg-red-400"}`}
-                      style={{ width: `${percentage}%` }}
-                    ></div>
-                  </div>
-                  <h1 className="text-body text-text-700">
-                    Rs. 1,500 remaining
-                  </h1>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2xl p-lg bg-card-100 rounded-xl shadow-effect-2 font-nunitosans">
-            <div className="flex flex-row gap-sm items-center">
-              <HealthcareIcon className="text-secondary-400" />
-              <p className="text-body leading-[130%] text-text-1000">
-                Financial Health Score
-              </p>
-            </div>
-            <div className="flex flex-col gap-2xl">
-              <div className="flex flex-col gap-sm">
-                <div className="flex flex-col justify-center items-center gap-xxs">
-                  <h1 className="text-heading text-secondary-500 font-semibold">
-                    78
-                  </h1>
-                  <p className="text-body text-text-700">out of 100</p>
-                </div>
-                <div className="flex flex-row justify-center items-center gap-xs text-secondary-500">
-                  <TrendingUp size={18} />
-                  <p className="text-heading3">Good</p>
-                </div>
-                <p className="text-text-700 text-body text-wrap text-center max-w-[360px] px-md">
-                  Your financial health is in good shape! Keep up the great
-                  work.
-                </p>
-              </div>
-              <div className="flex flex-col gap-md ">
-                <p className="text-body text-text-700">Contributing Factors</p>
-                {contributionData.map((item, index) => (
-                  <div key={index} className="flex flex-col gap-xs">
-                    <div className="flex flex-row justify-between">
-                      <p>{item.name}</p>
-                      <p>{item.percentage}%</p>
+                      <h1 className="text-body font-semibold text-text-1000">
+                        {(item.spentAmount / item.budgetAmount) * 100}%
+                      </h1>
                     </div>
                     <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
                       <div
-                        className={`h-1 rounded-full ${item.percentage < 70 ? "bg-yellow-400" : item.percentage < 90 ? "bg-secondary-400" : "bg-green-600"}`}
-                        style={{ width: `${item.percentage}%` }}
+                        className={`h-1 rounded-full ${(item.spentAmount / item.budgetAmount) * 100 < alertThreshold ? "bg-secondary-400" : (item.spentAmount / item.budgetAmount) * 100 < 100 ? "bg-yellow-400" : "bg-red-400"}`}
+                        style={{
+                          width: `${(item.spentAmount / item.budgetAmount) * 100 < 100 ? (item.spentAmount / item.budgetAmount) * 100 : 100}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <h1 className="text-body text-text-700">
+                      Rs.{" "}
+                      {(item.budgetAmount - item.spentAmount).toLocaleString(
+                        "en-NP",
+                        {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        },
+                      )}{" "}
+                      remaining
+                    </h1>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          {financialHealth && (
+            <div className="flex flex-col gap-2xl p-lg bg-card-100 rounded-xl shadow-effect-2 font-nunitosans">
+              <div className="flex flex-row gap-sm items-center">
+                <HealthcareIcon className="text-secondary-400" />
+                <p className="text-body leading-[130%] text-text-1000">
+                  Financial Health Score
+                </p>
+              </div>
+              <div className="flex flex-col gap-2xl">
+                <div className="flex flex-col gap-sm">
+                  <div className="flex flex-col justify-center items-center gap-xxs">
+                    <h1
+                      className={`text-heading font-semibold ${financialHealth.overallHealthScore.score < 40 ? "text-red-600" : financialHealth.overallHealthScore.score < 60 ? "text-yellow-500" : financialHealth.overallHealthScore.score < 80 ? "text-secondary-500" : "text-green-600"}`}
+                    >
+                      {financialHealth.overallHealthScore.score}
+                    </h1>
+                    <p className="text-body text-text-700">
+                      out of {financialHealth.overallHealthScore.outOf}
+                    </p>
+                  </div>
+                  <div
+                    className={`flex flex-row justify-center items-center gap-xs ${financialHealth.overallHealthScore.score < 40 ? "text-red-600" : financialHealth.overallHealthScore.score < 60 ? "text-yellow-500" : financialHealth.overallHealthScore.score < 80 ? "text-secondary-500" : "text-green-600"} `}
+                  >
+                    <TrendingUp size={18} />
+                    <p className="text-heading3">
+                      {financialHealth.overallHealthScore.status}
+                    </p>
+                  </div>
+                  <p className="text-text-700 text-body text-wrap text-center max-w-[360px] px-md">
+                    {
+                      financialHealthMessages[
+                        financialHealth.overallHealthScore.status
+                      ]
+                    }
+                  </p>
+                </div>
+                <div className="flex flex-col gap-md ">
+                  <p className="text-body text-text-700">
+                    Contributing Factors
+                  </p>
+
+                  <div className="flex flex-col gap-xs">
+                    <div className="flex flex-row justify-between">
+                      <p>{financialHealth.metrics.budgetAdherence.label}</p>
+                      <p>{financialHealth.metrics.budgetAdherence.value}%</p>
+                    </div>
+                    <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
+                      <div
+                        className={`h-1 rounded-full ${financialHealth.metrics.budgetAdherence.value < 40 ? "bg-red-600" : financialHealth.metrics.budgetAdherence.value < 60 ? "bg-yellow-500" : financialHealth.metrics.budgetAdherence.value < 80 ? "bg-secondary-500" : "bg-green-600"}`}
+                        style={{
+                          width: `${financialHealth.metrics.budgetAdherence.value}%`,
+                        }}
                       ></div>
                     </div>
                   </div>
-                ))}
+                  <div className="flex flex-col gap-xs">
+                    <div className="flex flex-row justify-between">
+                      <p>{financialHealth.metrics.savingsRate.label}</p>
+                      <p>{financialHealth.metrics.savingsRate.value}%</p>
+                    </div>
+                    <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
+                      <div
+                        className={`h-1 rounded-full ${financialHealth.metrics.savingsRate.value < 40 ? "bg-red-600" : financialHealth.metrics.savingsRate.value < 60 ? "bg-yellow-500" : financialHealth.metrics.savingsRate.value < 80 ? "bg-secondary-500" : "bg-green-600"}`}
+                        style={{
+                          width: `${financialHealth.metrics.savingsRate.value}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-xs">
+                    <div className="flex flex-row justify-between">
+                      <p>{financialHealth.metrics.spendingControl.label}</p>
+                      <p>{financialHealth.metrics.spendingControl.value}%</p>
+                    </div>
+                    <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
+                      <div
+                        className={`h-1 rounded-full ${financialHealth.metrics.spendingControl.value < 40 ? "bg-red-600" : financialHealth.metrics.spendingControl.value < 60 ? "bg-yellow-500" : financialHealth.metrics.spendingControl.value < 80 ? "bg-secondary-500" : "bg-green-600"}`}
+                        style={{
+                          width: `${financialHealth.metrics.spendingControl.value}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           <div className="flex flex-col gap-2xl p-lg bg-card-100 rounded-xl shadow-effect-2 font-nunitosans">
             <div className="flex flex-row gap-sm items-center">
               <Download size={20} />
