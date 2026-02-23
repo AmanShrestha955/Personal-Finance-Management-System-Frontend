@@ -14,6 +14,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteData, getData } from "@/utils/request";
 import { AxiosError } from "axios";
 import { getBudgets } from "@/utils/statisticsApi";
+import AutomatedTransactionsCard from "@/component/AutomatedTransactionsCard";
+import { getRecurringTransactions } from "@/utils/recurringTransctionApi";
 type TransactionData = {
   message: string;
   data: TransactionDetail[];
@@ -59,6 +61,17 @@ const Page: NextPage = ({}) => {
     },
   });
 
+  const {
+    data: recurringTransactionData,
+    isLoading: isLoadingRecurringTransactionData,
+  } = useQuery({
+    queryKey: ["recurringTransactions"],
+    queryFn: async () => {
+      const response = await getRecurringTransactions();
+      return response.data;
+    },
+  });
+
   const onClickTransactionItem = (transaction: TransactionDetail) => {
     console.log("clicked transaction item:", transaction);
     if (selectedTransaction?._id === transaction._id) {
@@ -95,7 +108,7 @@ const Page: NextPage = ({}) => {
     console.log(budgetData);
   }, [budgetData]);
   return (
-    <div className="w-full overflow-y-auto py-2xl px-xl flex flex-col bg-background-100 ">
+    <div className="w-full py-2xl px-xl flex flex-col bg-background-100 ">
       <h1 className="font-sansation text-heading font-semibold mb-md">
         Transaction Management
       </h1>
@@ -210,9 +223,17 @@ const Page: NextPage = ({}) => {
           </div>
         </div>
         {/* transaction detail card */}
-        {selectedTransaction && (
-          <TransactionDetailCard {...selectedTransaction} />
-        )}
+        <div className="flex flex-col">
+          <div className="sticky top-4">
+            {selectedTransaction ? (
+              <TransactionDetailCard {...selectedTransaction} />
+            ) : (
+              <AutomatedTransactionsCard
+                data={recurringTransactionData || []}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -46,10 +46,10 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
     >
       <td className="font-nunitosans py-xs">
         <div className="flex flex-col gap-xxs px-xs">
-          <div className="font-bold text-body text-text-1000 leading-[130%]">
+          <div className="font-bold text-body text-text-1000 leading-[130%] capitalize">
             {title}
           </div>
-          <div className="font-normal text-caption text-text-500 leading-[130%]">
+          <div className="font-normal text-caption text-text-500 leading-[130%] capitalize">
             {category}
           </div>
         </div>
@@ -57,7 +57,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
       <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs">
         {formattedDate}
       </td>
-      <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs">
+      <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs capitalize">
         {type}
       </td>
       <td

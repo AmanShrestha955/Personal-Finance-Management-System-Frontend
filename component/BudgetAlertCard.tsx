@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import WalletIcon from "./icons/wallet";
+import { categoryIcons } from "@/utils/category";
 
 export function BudgetAlertCard({
   id,
@@ -24,19 +25,21 @@ export function BudgetAlertCard({
       }}
     >
       <div className="flex flex-row justify-between items-center">
-        <p className="font-nunitosans font-normal text-heading3 leading-[130%] text-text-1000">
-          {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
+        <p className="font-nunitosans font-normal text-heading3 leading-[130%] text-text-1000 capitalize">
+          {category}
         </p>
-        <WalletIcon />
+        {/* <WalletIcon /> */}
+        {categoryIcons[category as keyof typeof categoryIcons] &&
+          categoryIcons[category as keyof typeof categoryIcons]({})}
       </div>
       <div className="flex flex-row justify-between items-center">
         <p className="font-nunitosans font-normal text-body leading-[130%] text-text-1000">
           Spend:
-          <span className="font-bold"> NPR {spentAmount}</span>
+          <span className="font-bold"> Rs. {spentAmount}</span>
         </p>
         <p className="font-nunitosans font-normal text-body leading-[130%] text-text-1000">
           Budget:
-          <span className="font-bold"> NPR {budgetAmount}</span>
+          <span className="font-bold"> Rs. {budgetAmount}</span>
         </p>
       </div>
       <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
