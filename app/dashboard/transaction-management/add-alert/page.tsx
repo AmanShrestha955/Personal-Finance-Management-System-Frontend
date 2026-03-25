@@ -2,6 +2,7 @@
 import DropDown from "@/component/DropDown";
 import { OthersIcon } from "@/component/icons/CategoryIcons";
 import Input from "@/component/Input";
+import { useNotification } from "@/hooks/NotificationContext";
 import { BackendErrorResponse, BudgetFormResponseData } from "@/types/type";
 import { categoryWithIcon } from "@/utils/category";
 import { getData, postData, putData } from "@/utils/request";
@@ -48,7 +49,7 @@ type TotalSpendResponseData = {
 };
 
 const Page: NextPage = ({}) => {
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const { addNotification } = useNotification();
   const [spendingPercentage, setSpendingPercentage] = useState<number>(0);
   const navigation = useRouter();
   const searchParams = useSearchParams();
@@ -132,12 +133,21 @@ const Page: NextPage = ({}) => {
     },
     onSuccess: (data) => {
       console.log("Successfully saved budget data: ", data);
+      addNotification(
+        "success",
+        isEditMode ? "Updated Budget Alert" : "Created Budget Alert",
+        data.message,
+      );
       navigation.push("/dashboard/transaction-management");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
-      const message = error?.response?.data?.error || error.message;
-      setErrorMessage(message);
-      console.log("Error in form data post: ", message);
+      addNotification(
+        "error",
+        "Error",
+        error.response?.data.message ||
+          "An error occurred while saving budget data.",
+      );
+      console.log("Error in form data post: ", error.response?.data.message);
     },
   });
 
@@ -202,10 +212,6 @@ const Page: NextPage = ({}) => {
         <h1 className="font-sansation font-bold text-heading text-text-1000 leading-[130%]">
           {isEditMode ? "Edit Budget Alert" : "Budget Alert"}
         </h1>
-
-        <p className="font-nunitosans text-body text-red-700 font-bold">
-          {errorMessage}
-        </p>
 
         {/* category */}
         <div className="flex flex-col gap-lg">

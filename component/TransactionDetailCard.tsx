@@ -1,4 +1,6 @@
 import { TransactionDetail } from "@/types/type";
+import Image from "next/image";
+import { useEffect } from "react";
 
 const TransactionDetailCard = ({
   title,
@@ -10,6 +12,15 @@ const TransactionDetailCard = ({
   receipt,
   note,
 }: TransactionDetail) => {
+  useEffect(() => {
+    console.log("Receipt URL:", receipt);
+    console.log("Environment Variable:", process.env.NEXT_PUBLIC_API_URL);
+    console.log(
+      "Full Receipt URL:",
+      `${process.env.NEXT_PUBLIC_BASE_URL}${receipt}`,
+    );
+  }, [receipt]);
+
   const date = new Date(transactionDate);
   return (
     <div className="flex flex-col px-lg py-md gap-md bg-card-100 rounded-md border border-card-200 shadow-effect-2 min-w-100 max-w-[420px]">
@@ -26,8 +37,12 @@ const TransactionDetailCard = ({
           year: "numeric",
         })}
       </p>
-      <p className="font-bold leading-[130%] text-heading3 text-red-600 font-nunitosans">
-        {`${amount > 0 ? "+ " : "- "}Rs${amount}`}
+      <p
+        className={`font-bold leading-[130%] text-heading3 ${
+          type === "expense" ? "text-red-600" : "text-green-600"
+        } font-nunitosans`}
+      >
+        {`${type === "expense" ? "- " : "+ "}Rs${amount}`}
       </p>
       <div className="flex flex-row gap-sm">
         <p className="font-nunitosans font-bold text-body text-text-1000 leading-[130%]">
@@ -60,7 +75,16 @@ const TransactionDetailCard = ({
           <p className="font-bold leading-[130%] text-body text-text-1000 font-nunitosans">
             Receipt
           </p>
-          <div className="w-[259px] h-[211px] bg-gray-300"></div>
+          <div className="w-[259px] h-[211px] bg-gray-300">
+            <Image
+              src={`${process.env.NEXT_PUBLIC_API_URL}/${receipt}`}
+              alt="receipt"
+              width={259}
+              height={211}
+              className="object-cover rounded-md"
+              unoptimized
+            />
+          </div>
         </>
       ) : null}
       {note ? (

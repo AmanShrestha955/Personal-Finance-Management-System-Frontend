@@ -22,8 +22,10 @@ import { useForm, Controller } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import { categoryWithIcon } from "@/utils/category";
 import { OthersIcon } from "@/component/icons/CategoryIcons";
+import { useNotification } from "@/hooks/NotificationContext";
 
 const Page: NextPage = () => {
+  const { addNotification } = useNotification();
   const navigation = useRouter();
   const searchParams = useSearchParams();
   const transactionId = searchParams.get("id");
@@ -66,39 +68,56 @@ const Page: NextPage = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: TransactionFormData) => {
-      return await postData<TransactionFormData, TransactionFormResponseData>(
+    mutationFn: async (data: FormData) => {
+      console.log("Creating transaction with data: ", data);
+      for (const [key, value] of data.entries()) {
+        console.log(key, value);
+      }
+      return await postData<FormData, TransactionFormResponseData>(
         "/transactions/",
         data,
       );
     },
     onSuccess: (data) => {
       console.log("sucessfully send form data: ", data);
+      if (data.warning && data.warningStatus) {
+        addNotification(data.warningStatus, "Budget Alert", data.warning);
+      }
+      addNotification(data.messageStatus, "Transaction", data.message);
       navigation.push("/dashboard/transaction-management");
     },
 
     onError: (error: AxiosError<BackendErrorResponse>) => {
       const message = error?.response?.data?.error || error.message;
-      setErrorMessage(message);
+      addNotification("error", "Transaction Error", message);
       console.log("error in form data post: ", message);
     },
   });
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: async (data: TransactionFormData) => {
-      return await putData<TransactionFormData, TransactionFormResponseData>(
+    mutationFn: async (data: FormData) => {
+      return await putData<FormData, TransactionFormResponseData>(
         `/transactions/${transactionId}`,
         data,
       );
     },
     onSuccess: (data) => {
       console.log("Successfully updated transaction: ", data);
+      if (data.warning) {
+        addNotification(
+          data.warningStatus || "warning",
+          "Budget Alert",
+          data.warning,
+        );
+      }
+      addNotification(data.messageStatus, "Transaction", data.message);
       navigation.push("/dashboard/transaction-management");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
       const message = error?.response?.data?.error || error.message;
-      setErrorMessage(message);
+      addNotification("error", "Update Error", message);
+      console.log("Error updating transaction: ", message);
     },
   });
 
@@ -156,7 +175,6 @@ const Page: NextPage = () => {
     queryFn: () => getData<null, AllBudgetResponseData>("/budgets"),
   });
 
-  const [errorMessage, setErrorMessage] = useState<string>("");
   const [afterTransactionBalance, setAfterTransactionBalance] = useState(
     (accountData?.data[0].balance as number) || 0,
   );
@@ -179,7 +197,14 @@ const Page: NextPage = () => {
         description: transactionData.description || "",
         tags: transactionData.tags || [],
         note: transactionData.note || "",
+        receipt: transactionData.receipt || null,
       });
+
+      if (transactionData.receipt) {
+        setReceiptPreview(
+          `${process.env.NEXT_PUBLIC_API_URL}/${transactionData.receipt}`,
+        );
+      }
 
       // Update selected category
       const category = categoryOptions.find(
@@ -200,12 +225,22 @@ const Page: NextPage = () => {
 
   const onSubmit = (data: TransactionFormData) => {
     data.transactionDate = new Date(data.transactionDate).toISOString();
-    console.log(data);
+
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === "receipt" && value instanceof File) {
+        formData.append("receipt", value);
+      } else if (key === "tags" && Array.isArray(value)) {
+        formData.append("tags", JSON.stringify(value));
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
 
     if (isEditMode) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(formData);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(formData);
     }
   };
   useEffect(() => {
@@ -256,10 +291,6 @@ const Page: NextPage = () => {
         <h1 className="font-sansation font-bold text-heading text-text-1000 leading-[130%]">
           Transaction Details
         </h1>
-
-        <p className="font-nunitosans text-body text-red-700 font-bold">
-          {errorMessage}
-        </p>
 
         {/* basic details */}
         <div className="flex flex-col gap-sm">
@@ -356,7 +387,12 @@ const Page: NextPage = () => {
             <Input
               placeholder=""
               type="date"
-              {...register("transactionDate", { required: "Date is required" })}
+              {...register("transactionDate", {
+                required: "Date is required",
+                validate: (value) =>
+                  value <= new Date().toISOString().split("T")[0] ||
+                  "Date cannot be in the future",
+              })}
             />
             {errors.transactionDate && (
               <span className="text-red-500 text-sm">
@@ -499,7 +535,7 @@ const Page: NextPage = () => {
                 id="receipt-upload"
                 accept="image/*"
                 className="hidden"
-                {...register("receipt")}
+                // {...register("receipt")}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
@@ -511,7 +547,7 @@ const Page: NextPage = () => {
                     reader.readAsDataURL(file);
 
                     // Update form value
-                    setValue("receipt", e.target.files);
+                    setValue("receipt", file);
                   }
                 }}
               />
@@ -529,6 +565,7 @@ const Page: NextPage = () => {
                     src={receiptPreview}
                     alt="Receipt preview"
                     className="w-full h-32 object-cover rounded-sm border border-card-200"
+                    unoptimized
                   />
                   <button
                     type="button"
@@ -631,7 +668,8 @@ const Page: NextPage = () => {
             <div className="flex flex-col gap-xxs">
               <p className="font-nunitosans font-normal ">
                 You&apos;ve spent Rs {selectedBudget?.spentAmount} of your Rs{" "}
-                {selectedBudget?.budgetAmount} Food budget.
+                {selectedBudget?.budgetAmount} {selectedBudget?.category}{" "}
+                budget.
               </p>
               <p className="font-nunitosans font-bold ">
                 Remaining: Rs{" "}

@@ -65,7 +65,7 @@ export type TransactionFormData = {
   paymentMethod: string;
   description: string;
   tags: string[];
-  receipt: FileList | null;
+  receipt: File | null;
   note: string;
 };
 export type BackendErrorResponse = {
@@ -75,6 +75,9 @@ export type BackendErrorResponse = {
 
 export type TransactionFormResponseData = {
   message: string;
+  messageStatus: "success" | "error";
+  warning?: string;
+  warningStatus?: "warning" | "error";
 };
 
 export type AccountResponseData = {

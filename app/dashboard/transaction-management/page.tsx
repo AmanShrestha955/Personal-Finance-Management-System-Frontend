@@ -16,6 +16,7 @@ import { AxiosError } from "axios";
 import { getBudgets } from "@/utils/statisticsApi";
 import AutomatedTransactionsCard from "@/component/AutomatedTransactionsCard";
 import { getRecurringTransactions } from "@/utils/recurringTransctionApi";
+import { useNotification } from "@/hooks/NotificationContext";
 type TransactionData = {
   message: string;
   data: TransactionDetail[];
@@ -34,7 +35,12 @@ type BudgetData = {
   message: string;
   data: BudgetDetail[];
 };
+
+type DeleteTransactionResponse = {
+  message: string;
+};
 const Page: NextPage = ({}) => {
+  const { addNotification } = useNotification();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -84,9 +90,10 @@ const Page: NextPage = ({}) => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await deleteData(`/transactions/${id}`);
+      return await deleteData<DeleteTransactionResponse>(`/transactions/${id}`);
     },
-    onSuccess: () => {
+    onSuccess: (data: DeleteTransactionResponse) => {
+      addNotification("success", "Transaction Deleted", data.message);
       console.log("Transaction deleted successfully");
       // Refetch the transactions to update the list
 

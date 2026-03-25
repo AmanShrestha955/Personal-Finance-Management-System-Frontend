@@ -16,12 +16,14 @@ import {
   updateSavingProgress,
 } from "@/utils/savingGoalApi";
 import { BackendErrorResponse } from "@/types/type";
+import { useNotification } from "@/hooks/NotificationContext";
 
 export default function Page({
   params,
 }: {
   params: Promise<{ action: string }>;
 }) {
+  const { addNotification } = useNotification();
   const navigation = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -54,7 +56,13 @@ export default function Page({
       return await updateSavingProgress(savingId as string, data);
     },
     onSuccess: (data) => {
-      console.log("sucessfully send form data: ", data);
+      console.log("successfully send form data: ", data);
+      addNotification(
+        "success",
+        action === "withdraw" ? "Withdrawal" : "Saving",
+        "Saving progress updated successfully",
+      );
+
       queryClient.invalidateQueries({ queryKey: ["saving-goals-stats"] });
       queryClient.invalidateQueries({ queryKey: ["saving-goals"] });
       queryClient.invalidateQueries({ queryKey: ["saving-goal", savingId] });
@@ -64,6 +72,11 @@ export default function Page({
     onError: (error: AxiosError<BackendErrorResponse>) => {
       const message = error?.response?.data?.error || error.message;
       setErrorMessage(message);
+      addNotification(
+        "error",
+        action === "withdraw" ? "Withdrawal" : "Saving",
+        message,
+      );
       console.log("error in form data post: ", message);
     },
   });

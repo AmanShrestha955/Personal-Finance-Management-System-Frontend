@@ -1,3 +1,4 @@
+"use client";
 import { useRouter } from "next/navigation";
 import WalletIcon from "./icons/wallet";
 import { categoryIcons } from "@/utils/category";

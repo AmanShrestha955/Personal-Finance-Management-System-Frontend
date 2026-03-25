@@ -7,6 +7,7 @@ import TransactionItem from "@/component/TransactionItem";
 import { TimeFilter, TimeOptionsDataType } from "@/types/type";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Download, FileText, Goal, TrendingUp } from "lucide-react";
+import { exportAsCSV, exportAsPDF } from "@/utils/exportApi";
 import { NextPage } from "next";
 import { useState } from "react";
 import {
@@ -23,6 +24,7 @@ import { categoryColors, categoryIcons } from "@/utils/category";
 // interface Props {}
 
 const Page: NextPage = ({}) => {
+  const [isExporting, setIsExporting] = useState<"pdf" | "csv" | null>(null);
   const quaryClient = useQueryClient();
   const financialHealthMessages: Record<string, string> = {
     Excellent: "Outstanding! Your financial health is excellent.",
@@ -121,6 +123,22 @@ const Page: NextPage = ({}) => {
     quaryClient.refetchQueries({ queryKey: ["money-highlights"] });
     quaryClient.refetchQueries({ queryKey: ["income-vs-expenses"] });
     setPeriod(selectedTimeOption.text);
+  };
+
+  const handleExport = async (format: "pdf" | "csv") => {
+    if (isExporting) return;
+    setIsExporting(format);
+    try {
+      if (format === "pdf") {
+        await exportAsPDF();
+      } else {
+        await exportAsCSV();
+      }
+    } catch (err) {
+      console.error(`${format.toUpperCase()} export failed:`, err);
+    } finally {
+      setIsExporting(null);
+    }
   };
 
   return (
@@ -265,7 +283,7 @@ const Page: NextPage = ({}) => {
             </h1>
             <IncomeVsExpenses data={incomeExpenseComparisonData || []} />
           </div>
-          <div className="flex flex-col gap-3xl p-lg rounded-xl shadow-effect-2 font-nunitosans">
+          <div className="flex flex-col gap-3xl p-lg rounded-xl bg-card-100 shadow-effect-2 font-nunitosans">
             <h1 className="text-heading3 font-semibold text-text-1000 leading-[130%]">
               Expense Trend ({period})
             </h1>
@@ -465,7 +483,11 @@ const Page: NextPage = ({}) => {
                         </div>
                       </div>
                       <h1 className="text-body font-semibold text-text-1000">
-                        {(item.spentAmount / item.budgetAmount) * 100}%
+                        {(
+                          (item.spentAmount / item.budgetAmount) *
+                          100
+                        ).toPrecision(3)}
+                        %
                       </h1>
                     </div>
                     <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
@@ -587,18 +609,32 @@ const Page: NextPage = ({}) => {
               </p>
             </div>
             <div className="flex flex-row gap-md">
-              <button className="flex flex-row gap-sm px-md py-xs border border-card-200 rounded-xl items-center">
+              <button
+                onClick={() => handleExport("pdf")}
+                disabled={isExporting !== null}
+                className="flex flex-row gap-sm px-md py-xs border border-card-200 rounded-xl items-center"
+              >
                 <FileText size={18} />
-                <p>Export as PDF</p>
+                <p>
+                  {isExporting === "pdf" ? "Exporting..." : "Export as PDF"}
+                </p>
               </button>
-              <button className="flex flex-row gap-sm px-md py-xs border border-card-200 rounded-xl items-center">
+              <button
+                onClick={() => handleExport("csv")}
+                disabled={isExporting !== null}
+                className="flex flex-row gap-sm px-md py-xs border border-card-200 rounded-xl items-center"
+              >
                 <FileText size={18} />
-                <p>Export as CSV</p>
+                <p>
+                  {isExporting === "csv" ? "Exporting..." : "Export as CSV"}
+                </p>
               </button>
             </div>
-            <p className="text-text-700 text-body text-wrap max-w-[360px] ">
+            <p className="text-text-700 text-body text-wrap max-w-[360px]">
               Export your financial data for record keeping or share with your
-              financial advisor.
+              financial advisor. The export includes the last{" "}
+              <span className="text-text-1000 font-semibold">12 months</span> of
+              transactions, budgets, saving goals, and recurring transactions.
             </p>
           </div>
         </div>

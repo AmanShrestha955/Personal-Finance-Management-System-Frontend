@@ -8,20 +8,29 @@ import GoogleIcon from "@/component/icons/google";
 import { LoginData, SignInForm } from "@/types/type";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/utils/request";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Cookies from "js-cookie";
 
 const Page: NextPage = () => {
   const navigation = useRouter();
-  const { register, handleSubmit } = useForm<SignInForm>();
+  const searchParams = useSearchParams();
+  const { register, handleSubmit, watch } = useForm<SignInForm>();
+  const rememberMe = watch("rememberMe");
   const mutation = useMutation({
     mutationFn: async (data: SignInForm) =>
       postData<SignInForm, LoginData>("/auth/login", data),
     onSuccess: (data) => {
       console.log("Sign in successful:", data);
       if (data.token) {
-        localStorage.setItem("token", data.token);
+        if (rememberMe) {
+          Cookies.set("token", data.token, { expires: 30 });
+        } else {
+          Cookies.set("token", data.token, { expires: 1 });
+        }
       }
-      navigation.push("/dashboard");
+      const redirect = searchParams.get("redirect") || "/dashboard";
+      console.log(redirect);
+      navigation.push(redirect);
     },
     onError: (error) => {
       console.error("Sign in failed:", error);

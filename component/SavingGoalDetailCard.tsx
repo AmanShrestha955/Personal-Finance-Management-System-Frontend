@@ -28,8 +28,10 @@ export default function SavingGoalDetailCard({
       }}
       className="flex flex-col p-md gap-sm rounded-md border border-card-200 bg-card-100 shadow-effect-2 font-nunitosans hover:scale-[1.02] transition-all duration-300 cursor-pointer"
     >
-      <h1 className="font-bold text-heading3 text-text-1000">{goalName}</h1>
-      <div className="flex flex-row flex-wrap gap-md">
+      <h1 className="font-bold text-heading3 text-text-1000 capitalize">
+        {goalName}
+      </h1>
+      <div className="flex flex-row flex-wrap gap-md capitalize">
         <Tag text={category} isSelected={false} />
       </div>
       <div className="flex flex-col gap-xs">

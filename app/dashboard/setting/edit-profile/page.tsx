@@ -150,6 +150,7 @@ const Page: NextPage = ({}) => {
             quality={100}
             fill
             className="rounded-full object-cover"
+            unoptimized
           />
         </div>
         <input

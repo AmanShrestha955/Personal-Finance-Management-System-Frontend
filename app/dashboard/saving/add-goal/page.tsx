@@ -17,8 +17,10 @@ import {
 } from "@/utils/savingGoalApi";
 import { categoryWithIcon } from "@/utils/category";
 import { OthersIcon } from "@/component/icons/CategoryIcons";
+import { useNotification } from "@/hooks/NotificationContext";
 
 const Page: NextPage = () => {
+  const { addNotification } = useNotification();
   const navigation = useRouter();
   const searchParams = useSearchParams();
   const savingId = searchParams.get("id");
@@ -59,12 +61,17 @@ const Page: NextPage = () => {
     },
     onSuccess: (data) => {
       console.log("sucessfully send form data: ", data);
+      addNotification(
+        "success",
+        "Saving Goal Created",
+        "Your saving goal has been created successfully",
+      );
       navigation.push("/dashboard/saving");
     },
 
     onError: (error: AxiosError<BackendErrorResponse>) => {
       const message = error?.response?.data?.error || error.message;
-      setErrorMessage(message);
+      addNotification("error", "Create Saving Goal", message);
       console.log("error in form data post: ", message);
     },
   });
@@ -76,11 +83,17 @@ const Page: NextPage = () => {
     },
     onSuccess: (data) => {
       console.log("Successfully updated Saving: ", data);
+      addNotification(
+        "success",
+        "Update Saving Goal",
+        "Saving goal updated successfully",
+      );
       navigation.push("/dashboard/saving");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
       const message = error?.response?.data?.error || error.message;
-      setErrorMessage(message);
+      addNotification("error", "Update Saving Goal", message);
+      console.log("Error updating saving goal: ", message);
     },
   });
 
@@ -96,8 +109,6 @@ const Page: NextPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(
     defaultCategorySelectedOption,
   );
-
-  const [errorMessage, setErrorMessage] = useState<string>("");
 
   // Populate form when editing
   useEffect(() => {
@@ -151,11 +162,6 @@ const Page: NextPage = () => {
             Set up your new savings objective. Fill in the details bellow.
           </p>
         </div>
-        {errorMessage && (
-          <p className="font-nunitosans text-body text-red-700 font-bold">
-            {errorMessage}
-          </p>
-        )}
 
         {/* basic details */}
         <div className="flex flex-col gap-lg">

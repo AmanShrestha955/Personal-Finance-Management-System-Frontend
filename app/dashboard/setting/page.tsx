@@ -23,7 +23,7 @@ const Page: NextPage = ({}) => {
   const { data: userData } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
-      const response = getUser();
+      const response = await getUser();
       return response;
     },
   });
@@ -37,6 +37,12 @@ const Page: NextPage = ({}) => {
 
   useEffect(() => {
     console.log("user Data: ", userData);
+    console.log(
+      "photoUrl:",
+      userData?.photo
+        ? `${process.env.NEXT_PUBLIC_API_URL}/${userData.photo}`
+        : null,
+    );
   }, [userData]);
   const router = useRouter();
   return (
@@ -116,8 +122,9 @@ const Page: NextPage = ({}) => {
             width={96}
             height={96}
             className="rounded-full size-[96px] bg-amber-200 object-cover"
-            src={`${userData?.photo ? userData.photo : "/default_user.jpg"}`}
+            src={`${userData?.photo ? `${process.env.NEXT_PUBLIC_API_URL}/${userData.photo}` : "/default_user.jpg"}`}
             alt="profile"
+            unoptimized
           />
           <div className="flex flex-col font-nunitosans">
             <p className="text-heading3 font-medium capitalize">
