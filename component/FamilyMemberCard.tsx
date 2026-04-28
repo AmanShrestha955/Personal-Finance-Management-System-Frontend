@@ -4,13 +4,13 @@ import Image from "next/image";
 interface FamilyMemberCardProps {
   memberImage: string;
   name: string;
-  role: "Admin" | "Member" | "Child";
+  role: "Owner" | "Member" | "Child";
   email: string;
   monthlyBudget: string;
 }
 
 const roleBadgeStyles: Record<FamilyMemberCardProps["role"], string> = {
-  Admin: "bg-tag-1 text-primary-700",
+  Owner: "bg-tag-1 text-primary-700",
   Member: "bg-card-200 text-card-800",
   Child: "bg-tag-2 text-secondary-700",
 };
@@ -23,7 +23,7 @@ export function FamilyMemberCard({
   monthlyBudget,
 }: FamilyMemberCardProps) {
   return (
-    <div className="flex flex-col gap-4 p-5 rounded-xl bg-card-100 flex-1 min-w-0 shadow-effect-1">
+    <div className="flex flex-col gap-4 p-5 rounded-xl bg-card-200/50 flex-1 min-w-0 shadow-effect-1">
       {/* Header: avatar + name + badge */}
       <div className="flex items-start gap-4">
         <Image
@@ -32,7 +32,7 @@ export function FamilyMemberCard({
           src={memberImage.length > 0 ? memberImage : "/default_user.jpg"}
           alt="Member"
           unoptimized
-          className="rounded-full"
+          className="rounded-full object-cover object-center w-10 h-10 shrink-0"
         />
         <div className="flex flex-col gap-1 min-w-0">
           <span className="text-card-800 font-bold text-lg leading-7 truncate">

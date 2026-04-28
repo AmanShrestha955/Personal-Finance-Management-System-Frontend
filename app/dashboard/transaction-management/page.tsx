@@ -9,7 +9,7 @@ import { BackendErrorResponse, TransactionDetail } from "@/types/type";
 import { Plus } from "lucide-react";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteData, getData } from "@/utils/request";
 import { AxiosError } from "axios";
@@ -46,6 +46,25 @@ const Page: NextPage = ({}) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionDetail | null>(null);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Add horizontal scroll on wheel event
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (el.scrollWidth > el.clientWidth) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, []);
+
   const {
     data: transactionData,
     isLoading: isLoadingTransactionData,
@@ -132,7 +151,18 @@ const Page: NextPage = ({}) => {
         </button>
       </div>
       {/* budget alert cards */}
-      <div className="w-full flex flex-row overflow-hidden overflow-x-auto scrollbar [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full  [&::-webkit-scrollbar-thumb]:bg-primary-300 [&::-webkit-scrollbar-track]:bg-background-100/0 gap-md p-sm">
+      <div
+        ref={scrollRef}
+        onWheel={(e) => {
+          const el = e.currentTarget;
+
+          if (el.scrollWidth > el.clientWidth) {
+            e.preventDefault();
+            el.scrollLeft += e.deltaY;
+          }
+        }}
+        className="w-full flex flex-row overflow-hidden scroll overflow-x-auto scrollbar [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full  [&::-webkit-scrollbar-thumb]:bg-primary-300 [&::-webkit-scrollbar-track]:bg-background-100/0 gap-md p-sm"
+      >
         {budgetData?.map((budget, index) => (
           <BudgetAlertCard
             key={index}

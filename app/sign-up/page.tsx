@@ -3,25 +3,41 @@
 import { NextPage } from "next";
 import Link from "next/link";
 import backgroundImage from "../../public/auth_image.jpg";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, set } from "react-hook-form";
 import GoogleIcon from "@/component/icons/google";
 import { SignUpData, SignUpForm } from "@/types/type";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/utils/request";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { AxiosError } from "axios";
 
 // interface Props {}
 
 const Page: NextPage = () => {
-  const { register, handleSubmit } = useForm<SignUpForm>();
+  const [emailSent, setEmailSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+    reset,
+  } = useForm<SignUpForm>();
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: SignUpForm) =>
       postData<SignUpForm, SignUpData>("/auth/signup", data),
     onSuccess: (data) => {
       console.log("Sign up successful:", data);
+      reset();
+      setErrorMessage("");
+      setEmailSent(true);
     },
-    onError: (error) => {
-      console.error("Sign up failed:", error);
+    onError: (error: AxiosError | any) => {
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Something went wrong. Please try again.",
+      );
     },
   });
 
@@ -40,6 +56,57 @@ const Page: NextPage = () => {
       <div className="flex-1">
         <div className="flex flex-col px-3xl py-2xl lg:px-6xl lg:pt-5xl gap-md">
           {/* need to put font family here */}
+          {emailSent && (
+            <div className="flex flex-row items-start gap-sm p-sm rounded-lg bg-blue-50 border border-blue-200">
+              <svg
+                className="w-5 h-5 text-blue-500 mt-0.5 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5H4.5a2.25 2.25 0 00-2.25 2.25m19.5 0l-9.75 7.5-9.75-7.5"
+                />
+              </svg>
+              <div className="flex flex-col gap-0.5">
+                <p className="font-nunitosans font-bold text-caption text-blue-700 leading-[100%]">
+                  Check your email
+                </p>
+                <p className="font-nunitosans font-medium text-caption text-blue-600 leading-[150%]">
+                  We've sent a verification link to your inbox. Please check
+                  your email to activate your account.
+                </p>
+              </div>
+            </div>
+          )}
+          {errorMessage && (
+            <div className="flex flex-row items-start gap-sm p-sm rounded-lg bg-red-50 border border-red-200">
+              <svg
+                className="w-5 h-5 text-red-500 mt-0.5 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                />
+              </svg>
+              <div className="flex flex-col gap-0.5">
+                <p className="font-nunitosans font-bold text-caption text-red-700 leading-[100%]">
+                  Sign up failed
+                </p>
+                <p className="font-nunitosans font-medium text-caption text-red-600 leading-[150%]">
+                  {errorMessage}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-xs">
             <h1 className="text-heading2 font-sansation font-bold text-text-1000 leading-[100%]">
               Get Started Now
@@ -70,9 +137,20 @@ const Page: NextPage = () => {
               <input
                 type="text"
                 placeholder="Email"
-                {...register("email")}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Enter a valid email address",
+                  },
+                })}
                 className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-text-300 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
               />
+              {errors.email && (
+                <p className="font-nunitosans text-caption text-red-500 leading-[100%]">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-xs">
               <p className="font-nunitosans font-bold text-caption text-text-600 leading-[100%]">
@@ -81,9 +159,24 @@ const Page: NextPage = () => {
               <input
                 type="password"
                 placeholder="Password"
-                {...register("password")}
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 8,
+                    message: "Password must be at least 8 characters",
+                  },
+                  maxLength: {
+                    value: 32,
+                    message: "Password must be at most 32 characters",
+                  },
+                })}
                 className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-text-300 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
               />
+              {errors.password && (
+                <p className="font-nunitosans text-caption text-red-500 leading-[100%]">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-xs">
               <p className="font-nunitosans font-bold text-caption text-text-600 leading-[100%]">
@@ -92,9 +185,18 @@ const Page: NextPage = () => {
               <input
                 type="password"
                 placeholder="Confirm Password"
-                {...register("confirmPassword")}
+                {...register("confirmPassword", {
+                  required: "Please confirm your password",
+                  validate: (value) =>
+                    value === getValues("password") || "Passwords do not match",
+                })}
                 className="font-medium text-text-1000 placeholder-text-600 font-nunitosans p-sm border border-text-300 rounded-md focus:outline-none focus:border-[3px] focus:border-primary-500 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.19)] transition-all duration-50"
               />
+              {errors.confirmPassword && (
+                <p className="font-nunitosans text-caption text-red-500 leading-[100%]">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
             </div>
             <button
               disabled={isPending}

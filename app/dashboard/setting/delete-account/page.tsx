@@ -7,6 +7,7 @@ import { NextPage } from "next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import Cookies from "js-cookie";
 
 // interface Props {}
 
@@ -31,6 +32,7 @@ const Page: NextPage = ({}) => {
   } = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
+      Cookies.remove("token");
       router.replace("/");
     },
   });

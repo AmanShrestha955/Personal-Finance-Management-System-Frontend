@@ -81,7 +81,7 @@ const TransactionDetailCard = ({
               alt="receipt"
               width={259}
               height={211}
-              className="object-cover rounded-md"
+              className="object-cover rounded-md w-[259px] h-[211px]"
               unoptimized
             />
           </div>

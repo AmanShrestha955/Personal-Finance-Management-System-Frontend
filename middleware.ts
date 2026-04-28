@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/", "/sign-in", "/sign-up"];
+const PUBLIC_ROUTES = ["/", "/sign-in", "/sign-up", "/forgot-password"];
+
+const PUBLIC_PREFIXES = ["/verify-email", "/reset-password"];
 
 const isTokenExpired = (token: string): boolean => {
   try {
@@ -14,7 +16,11 @@ const isTokenExpired = (token: string): boolean => {
 export const middleware = (req: NextRequest) => {
   const { pathname } = req.nextUrl;
 
-  if (PUBLIC_ROUTES.includes(pathname)) {
+  const isPublic =
+    PUBLIC_ROUTES.includes(pathname) ||
+    PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+
+  if (isPublic) {
     return NextResponse.next();
   }
 

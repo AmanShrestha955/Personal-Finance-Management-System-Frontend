@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import SavingIcon from "./icons/saving";
 import CheckmarkIcon from "./icons/checkmark";
+import { categoryWithIcon } from "@/utils/category";
+import { Category } from "@/types/type";
 
 const FilterCard = ({}) => {
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+
+  const toggleCategory = (text: Category) => {
+    setSelectedCategories((prev) =>
+      prev.includes(text) ? prev.filter((c) => c !== text) : [...prev, text],
+    );
+  };
   return (
     <div className="absolute right-0 top-[130%] flex flex-col items-start gap-md rounded-md border border-card-200 bg-card-100 py-xl px-lg shadow-effect-3">
       <div className="flex flex-col gap-sm">
@@ -88,22 +97,26 @@ const FilterCard = ({}) => {
             id="categorie"
             className="hidden peer"
           />
-          {[1, 2, 3, 4, 5, 6].map((item, index) => (
-            <label
-              key={index}
-              htmlFor="categorie"
-              className="group font-nunitosans font-bold text-caption leading-[130%] text-text-600 cursor-pointer flex flex-row gap-xs items-center shadow-effect-1 bg-card-100 px-xs py-xxs rounded-full peer-checked:text-text-1000 peer-checked:[&_.check]:block
-    peer-checked:[&_.categore]:hidden"
-            >
-              <CheckmarkIcon width={16} height={16} className="check hidden" />
-              <SavingIcon
-                width={16}
-                height={16}
-                className="text-text-600 categore block"
-              />
-              Categorie {item}
-            </label>
-          ))}
+          {categoryWithIcon.map(({ text, icon: Icon }) => {
+            const isSelected = selectedCategories.includes(text);
+            return (
+              <button
+                key={text}
+                type="button"
+                onClick={() => toggleCategory(text)}
+                className={`font-nunitosans font-bold text-caption leading-[130%] cursor-pointer flex flex-row gap-xs items-center shadow-effect-1 bg-card-100 px-xs py-xxs rounded-full transition-colors duration-200 ${
+                  isSelected ? "text-text-1000" : "text-text-600"
+                }`}
+              >
+                {isSelected ? (
+                  <CheckmarkIcon width={16} height={16} />
+                ) : (
+                  <Icon />
+                )}
+                {text}
+              </button>
+            );
+          })}
         </div>
       </div>
       <div className="flex flex-row gap-sm justify-end w-full">

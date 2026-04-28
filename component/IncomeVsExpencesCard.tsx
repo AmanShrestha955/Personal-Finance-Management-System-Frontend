@@ -30,7 +30,7 @@ export default function IncomeVsExpenses({
         <Tooltip />
         <Legend />
         {/* <CartesianGrid stroke="#ccc" strokeDasharray="5 5" /> */}
-        <Bar dataKey="expences" fill="#ed5747" barSize={24} />
+        <Bar dataKey="expenses" fill="#ed5747" barSize={24} />
         <Bar dataKey="income" fill="green" barSize={24} />
       </BarChart>
     </ResponsiveContainer>
