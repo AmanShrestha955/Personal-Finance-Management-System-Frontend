@@ -134,8 +134,17 @@ const Page: NextPage = () => {
             >
               Register Now
             </Link>
-          </p>
-        </div>
+          </p>          <div className="border-t border-text-300 pt-md">
+            <p className="text-caption text-center font-nunitosans font-medium text-text-600 leading-[100%]">
+              Admin?{" "}
+              <Link
+                href="/admin-sign-in"
+                className="text-primary-500 font-bold hover:underline"
+              >
+                Sign in to Admin Portal
+              </Link>
+            </p>
+          </div>        </div>
       </div>
       {/* right side */}
       <div className="flex-1 rounded-lg bg-primary-500 relative hidden lg:flex">

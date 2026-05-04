@@ -10,7 +10,12 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = Cookies.get("token");
+    // Check for admin token first (for admin routes)
+    const adminToken = Cookies.get("adminToken");
+    // Check for regular user token
+    const userToken = Cookies.get("token");
+    
+    const token = adminToken || userToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

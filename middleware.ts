@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/", "/sign-in", "/sign-up", "/forgot-password"];
+const PUBLIC_ROUTES = [
+  "/",
+  "/sign-in",
+  "/sign-up",
+  "/forgot-password",
+  "/admin-sign-in",
+];
 
 const PUBLIC_PREFIXES = ["/verify-email", "/reset-password"];
+
+const ADMIN_ROUTES = ["/admin"];
 
 const isTokenExpired = (token: string): boolean => {
   try {
@@ -14,7 +22,7 @@ const isTokenExpired = (token: string): boolean => {
 };
 
 export const middleware = (req: NextRequest) => {
-  const { pathname } = req.nextUrl;
+  const { pathname, searchParams } = req.nextUrl;
 
   const isPublic =
     PUBLIC_ROUTES.includes(pathname) ||
@@ -24,6 +32,31 @@ export const middleware = (req: NextRequest) => {
     return NextResponse.next();
   }
 
+  // Check if this is an admin route
+  const isAdminRoute = ADMIN_ROUTES.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
+
+  if (isAdminRoute) {
+    // Allow preview mode without authentication
+    const previewMode = searchParams.get("preview") === "true";
+    if (previewMode) {
+      return NextResponse.next();
+    }
+
+    const adminToken = req.cookies.get("adminToken")?.value;
+    const userRole = req.cookies.get("userRole")?.value;
+
+    if (!adminToken || userRole !== "admin" || isTokenExpired(adminToken)) {
+      const adminSignInUrl = new URL("/admin-sign-in", req.url);
+      adminSignInUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(adminSignInUrl);
+    }
+
+    return NextResponse.next();
+  }
+
+  // Regular user routes
   const token = req.cookies.get("token")?.value;
 
   if (!token || isTokenExpired(token)) {
