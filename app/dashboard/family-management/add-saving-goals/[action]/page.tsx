@@ -61,7 +61,11 @@ export default function Page({
   const updateProgressMutation = useMutation({
     mutationFn: async (amount: number) => {
       if (!family?._id) throw new Error("Family not found");
-      return await updateFamilySavingProgress(family._id, savingId as string, amount);
+      return await updateFamilySavingProgress(
+        family._id,
+        savingId as string,
+        amount,
+      );
     },
     onSuccess: (data) => {
       console.log("successfully updated family saving progress: ", data);
@@ -71,9 +75,13 @@ export default function Page({
         "Family saving progress updated successfully",
       );
 
-      queryClient.invalidateQueries({ queryKey: ["family-saving-goals-stats"] });
+      queryClient.invalidateQueries({
+        queryKey: ["family-saving-goals-stats"],
+      });
       queryClient.invalidateQueries({ queryKey: ["family-saving-goals"] });
-      queryClient.invalidateQueries({ queryKey: ["family-saving-goal", savingId] });
+      queryClient.invalidateQueries({
+        queryKey: ["family-saving-goal", savingId],
+      });
       navigation.push("/dashboard/family-management");
     },
 
@@ -114,7 +122,7 @@ export default function Page({
   };
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col lg:flex-row gap-md mt-8 px-md lg:px-xl">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-xl"
@@ -145,7 +153,7 @@ export default function Page({
             </h2>
             {savingGoal && (
               <>
-                <div className="flex flex-row justify-between font-semibold text-body text-text-1000">
+                <div className="flex flex-col sm:flex-row justify-between gap-sm font-semibold text-body text-text-1000">
                   <div className="flex flex-col gap-lg">
                     <p>Category: {savingGoal.category}</p>
                     <p>Total Amount: Rs {savingGoal.targetAmount}</p>
@@ -164,9 +172,7 @@ export default function Page({
                           )
                         : "—"}
                     </p>
-                    <p>
-                      Currently Saved: Rs {savingGoal.currentSaving}
-                    </p>
+                    <p>Currently Saved: Rs {savingGoal.currentSaving}</p>
                   </div>
                 </div>
 
@@ -179,16 +185,17 @@ export default function Page({
                     <span className="font-semibold text-text-1000">
                       {savingGoal.targetAmount > 0
                         ? Math.round(
-                            (savingGoal.currentSaving / savingGoal.targetAmount) *
+                            (savingGoal.currentSaving /
+                              savingGoal.targetAmount) *
                               100,
                           )
                         : 0}
                       %
                     </span>
                   </div>
-                  <div className="w-full bg-card-300 rounded-full h-3">
+                  <div className="w-full bg-card-300 rounded-full h-1">
                     <div
-                      className="bg-primary-500 h-3 rounded-full transition-all duration-300"
+                      className="bg-primary-500 h-1 rounded-full transition-all duration-300"
                       style={{
                         width:
                           savingGoal.targetAmount > 0
@@ -258,7 +265,7 @@ export default function Page({
       </form>
 
       <div className="flex flex-col gap-md">
-        <div className="flex flex-col gap-md py-lg px-md w-[442px] min-w-[300px] rounded-md bg-card-200">
+        <div className="flex flex-col gap-md py-lg px-md w-full lg:w-[442px] lg:min-w-[300px] rounded-md bg-card-200">
           <h4 className="font-nunitosans font-bold text-text-1000 text-heading3">
             {action === "add-amount"
               ? "How to Add Funds"

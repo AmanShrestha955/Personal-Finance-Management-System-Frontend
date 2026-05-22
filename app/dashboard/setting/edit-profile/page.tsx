@@ -130,7 +130,7 @@ const Page: NextPage = ({}) => {
 
   // ── Render ───────────────────────────────────
   return (
-    <div className="w-full overflow-y-auto py-2xl px-xl flex flex-col bg-background-100 gap-xl">
+    <div className="w-full overflow-y-auto py-2xl px-md md:px-xl flex flex-col bg-background-100 gap-xl">
       <div className="flex flex-row gap-md items-center">
         <button
           onClick={() => router.back()}
@@ -176,7 +176,7 @@ const Page: NextPage = ({}) => {
       {/* Form section */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-2xl p-xl bg-card-100 shadow-effect-2 rounded-xl font-nunitosans"
+        className="flex flex-col gap-2xl p-md md:p-xl bg-card-100 shadow-effect-2 rounded-xl font-nunitosans"
       >
         <h1 className="font-bold text-text-1000 text-body">Profile Info</h1>
 

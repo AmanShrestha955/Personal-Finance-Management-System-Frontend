@@ -41,7 +41,7 @@ const Page: NextPage = ({}) => {
     deleteAccount();
   };
   return (
-    <div className="w-full overflow-y-auto py-2xl px-xl flex flex-col bg-background-100 gap-xl ">
+    <div className="w-full overflow-y-auto py-2xl px-md md:px-xl flex flex-col bg-background-100 gap-xl">
       <div className="flex flex-row gap-md items-center">
         <button
           onClick={() => {
@@ -66,7 +66,7 @@ const Page: NextPage = ({}) => {
       </div>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-2xl p-xl bg-card-100 shadow-effect-2 rounded-xl font-nunitosans"
+        className="flex flex-col gap-2xl p-md md:p-xl bg-card-100 shadow-effect-2 rounded-xl font-nunitosans"
       >
         <div className="flex flex-row gap-md items-center">
           <div className="size-[40px] flex justify-center items-center bg-red-600 text-text-100 rounded-lg">

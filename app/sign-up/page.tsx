@@ -3,7 +3,7 @@
 import { NextPage } from "next";
 import Link from "next/link";
 import backgroundImage from "../../public/auth_image.jpg";
-import { useForm, SubmitHandler, set } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import GoogleIcon from "@/component/icons/google";
 import { SignUpData, SignUpForm } from "@/types/type";
 import { useMutation } from "@tanstack/react-query";
@@ -11,12 +11,17 @@ import { postData } from "@/utils/request";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { AxiosError } from "axios";
-
-// interface Props {}
+import { useGoogleLogin } from "@react-oauth/google";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { LoginData } from "@/types/type";
 
 const Page: NextPage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [googleError, setGoogleError] = useState("");
+  const navigation = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -24,11 +29,12 @@ const Page: NextPage = () => {
     getValues,
     reset,
   } = useForm<SignUpForm>();
+
+  // ── Email / Password sign up ──────────────────────────────────────────────
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: SignUpForm) =>
       postData<SignUpForm, SignUpData>("/auth/signup", data),
     onSuccess: (data) => {
-      console.log("Sign up successful:", data);
       reset();
       setErrorMessage("");
       setEmailSent(true);
@@ -36,26 +42,54 @@ const Page: NextPage = () => {
     onError: (error: AxiosError | any) => {
       setErrorMessage(
         error.response?.data?.message ||
-          "Something went wrong. Please try again.",
+          "Something went wrong. Please try again."
       );
     },
   });
 
   const onSubmit: SubmitHandler<SignUpForm> = (data) => {
-    console.log(data);
     if (data.password !== data.confirmPassword) {
-      console.log("Password dose not match");
       return;
     }
     mutate(data);
   };
+
+  // ── Google sign up ────────────────────────────────────────────────────────
+  const googleSignUpMutation = useMutation({
+    mutationFn: async (accessToken: string) =>
+      postData<{ accessToken: string }, LoginData>("/auth/google", {
+        accessToken,
+      }),
+    onSuccess: (data) => {
+      if (data.token) {
+        Cookies.set("token", data.token, { expires: 30 });
+      }
+      navigation.push("/dashboard");
+    },
+    onError: (error: any) => {
+      setGoogleError(
+        error.response?.data?.message ||
+          "Google sign-up failed. Please try again."
+      );
+    },
+  });
+
+  const handleGoogleSignUp = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      setGoogleError("");
+      googleSignUpMutation.mutate(tokenResponse.access_token);
+    },
+    onError: () => {
+      setGoogleError("Google sign-up was cancelled or failed.");
+    },
+  });
 
   return (
     <div className="flex flex-col lg:flex-row gap-0 w-screen min-h-screen bg-background-100">
       {/* left side */}
       <div className="flex-1">
         <div className="flex flex-col px-3xl py-2xl lg:px-6xl lg:pt-5xl gap-md">
-          {/* need to put font family here */}
+          {/* Email verification success */}
           {emailSent && (
             <div className="flex flex-row items-start gap-sm p-sm rounded-lg bg-blue-50 border border-blue-200">
               <svg
@@ -76,12 +110,14 @@ const Page: NextPage = () => {
                   Check your email
                 </p>
                 <p className="font-nunitosans font-medium text-caption text-blue-600 leading-[150%]">
-                  We've sent a verification link to your inbox. Please check
-                  your email to activate your account.
+                  We&apos;ve sent a verification link to your inbox. Please
+                  check your email to activate your account.
                 </p>
               </div>
             </div>
           )}
+
+          {/* Sign up error */}
           {errorMessage && (
             <div className="flex flex-row items-start gap-sm p-sm rounded-lg bg-red-50 border border-red-200">
               <svg
@@ -107,14 +143,38 @@ const Page: NextPage = () => {
               </div>
             </div>
           )}
+
+          {/* Google error */}
+          {googleError && (
+            <div className="flex flex-row items-start gap-sm p-sm rounded-lg bg-red-50 border border-red-200">
+              <svg
+                className="w-5 h-5 text-red-500 mt-0.5 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                />
+              </svg>
+              <p className="font-nunitosans font-medium text-caption text-red-600 leading-[150%]">
+                {googleError}
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-col gap-xs">
             <h1 className="text-heading2 font-sansation font-bold text-text-1000 leading-[100%]">
               Get Started Now
             </h1>
             <p className="text-text-1000 font-nunitosans font-medium leading-[100%]">
-              Enter your credentials to access your account.
+              Enter your credentials to create your account.
             </p>
           </div>
+
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="flex flex-col gap-md"
@@ -201,7 +261,7 @@ const Page: NextPage = () => {
             <button
               disabled={isPending}
               type="submit"
-              className="font-nunitosans font-bold text-text-100 text-body py-sm rounded-lg bg-primary-500 hover:bg-primary-600 active:bg-primary-800 transition-all duration-150"
+              className="flex justify-center items-center font-nunitosans font-bold text-text-100 text-body py-sm rounded-lg bg-primary-500 hover:bg-primary-600 active:bg-primary-800 transition-all duration-150 disabled:opacity-70"
             >
               {isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -210,6 +270,7 @@ const Page: NextPage = () => {
               )}
             </button>
           </form>
+
           {/* --- or --- */}
           <div className="flex flex-row gap-sm items-center">
             <div className="w-full h-px bg-text-300"></div>
@@ -218,32 +279,40 @@ const Page: NextPage = () => {
             </p>
             <div className="w-full h-px bg-text-300"></div>
           </div>
-          {/* google sign up button */}
-          <button className="flex flex-row items-center py-xs px-sm border border-text-300 rounded-full shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_6px_-2px_rgba(0,0,0,0.19)] cursor-pointer hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_2px_6px_-2px_rgba(0,0,0,0.25)] active:shadow-[0_0_0_1px_rgba(0,0,0,0.15),0_1px_3px_-1px_rgba(0,0,0,0.15)] transition-all duration-150">
-            <GoogleIcon />{" "}
-            <p className="flex-1 text-center font-nunitosans font-medium text-text-1000 text-body leading-[130%]">
-              Sign up with google
-            </p>
+
+          {/* Google sign up button */}
+          <button
+            type="button"
+            onClick={() => handleGoogleSignUp()}
+            disabled={googleSignUpMutation.isPending}
+            className="flex flex-row items-center py-xs px-sm border border-text-300 rounded-full shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_6px_-2px_rgba(0,0,0,0.19)] cursor-pointer hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_2px_6px_-2px_rgba(0,0,0,0.25)] active:shadow-[0_0_0_1px_rgba(0,0,0,0.15),0_1px_3px_-1px_rgba(0,0,0,0.15)] transition-all duration-150 disabled:opacity-70"
+          >
+            {googleSignUpMutation.isPending ? (
+              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+            ) : (
+              <>
+                <GoogleIcon />
+                <p className="flex-1 text-center font-nunitosans font-medium text-text-1000 text-body leading-[130%]">
+                  Sign up with Google
+                </p>
+              </>
+            )}
           </button>
+
           <p className="text-caption text-center font-nunitosans font-medium text-text-1000 leading-[100%]">
             Already have an account?{" "}
-            <Link
-              href="/sign-in"
-              className="text-primary-400 font-bold hover:underline"
-            >
+            <Link href="/sign-in" className="text-primary-400 font-bold hover:underline">
               Sign in
             </Link>
           </p>
         </div>
       </div>
+
       {/* right side */}
       <div className="flex-1 rounded-lg m-sm bg-primary-500 relative hidden lg:flex">
-        {/* image and blur effect */}
         <div
           className="absolute opacity-20 w-full h-full rounded-lg bg-cover bg-center blur-[2px]"
-          style={{
-            backgroundImage: `url(${backgroundImage.src})`,
-          }}
+          style={{ backgroundImage: `url(${backgroundImage.src})` }}
         ></div>
         <div className="flex flex-col justify-end py-5xl px-md gap-sm text-white">
           <h1 className="font-sansation font-bold text-heading leading-[100%]">

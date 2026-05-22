@@ -36,7 +36,7 @@ const MoneyHighlights = ({
           {period}&apos;s Money Highlights
         </p>
       </div>
-      <div className="flex flex-row gap-md">
+      <div className="flex flex-col md:flex-row gap-md">
         <div className="flex flex-1 flex-col p-md rounded-lg bg-background-100 gap-xxs font-nunitosans">
           <h1 className="text-text-800 text-body">Total Income</h1>
           <h2 className="text-text-1000 text-body">{totalIncome}</h2>

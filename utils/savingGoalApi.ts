@@ -1,5 +1,15 @@
 import { getData, postData, putData, deleteData } from "./request";
 
+// Projection Types
+export interface GoalProjection {
+  status: "on_track" | "completed" | "insufficient_data";
+  avgMonthlyRate?: number;
+  monthsNeeded?: number;
+  projectedDate?: string;
+  projectedDateLabel?: string;
+  message?: string;
+}
+
 // Types
 export interface SavingGoal {
   _id: string;
@@ -12,6 +22,11 @@ export interface SavingGoal {
   isCompleted: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+// Extended type returned by getSavingGoals (includes projection)
+export interface SavingGoalWithProjection extends SavingGoal {
+  projection: GoalProjection;
 }
 
 export interface CreateSavingGoalData {
@@ -58,8 +73,8 @@ export interface SavingGoalStatsData {
 }
 
 // API Functions
-export const getSavingGoals = async (): Promise<SavingGoal[]> => {
-  const response = await getData<null, ApiResponse<SavingGoal[]>>(
+export const getSavingGoals = async (): Promise<SavingGoalWithProjection[]> => {
+  const response = await getData<null, ApiResponse<SavingGoalWithProjection[]>>(
     "/savingGoals",
   );
   return response.data;

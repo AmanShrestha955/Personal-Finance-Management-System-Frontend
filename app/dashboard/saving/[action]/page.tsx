@@ -107,7 +107,7 @@ export default function Page({
   };
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col xl:flex-row gap-md mt-8 px-md lg:px-xl">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-xl"
@@ -134,12 +134,12 @@ export default function Page({
             <h2 className="font-bold text-heading2 text-text-1000">
               {savingGoal?.goalName}
             </h2>
-            <div className="flex flex-row justify-between font-semibold text-body text-text-1000">
-              <div className="flex flex-col gap-lg">
+            <div className="flex flex-col sm:flex-row justify-between gap-sm font-semibold text-body text-text-1000">
+              <div className="flex flex-col lg:gap-lg gap-sm">
                 <p>Category: {savingGoal?.category}</p>
                 <p>Total Amount: Rs {savingGoal?.targetAmount}</p>
               </div>
-              <div className="flex flex-col gap-lg">
+              <div className="flex flex-col lg:gap-lg gap-sm">
                 <p>
                   Deadline:{" "}
                   {savingGoal?.deadline

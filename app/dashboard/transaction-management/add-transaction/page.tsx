@@ -148,7 +148,16 @@ const Page: NextPage = () => {
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
-  const recentTags = ["recenttag1", "recenttag2", "recenttag3", "recenttag4"];
+
+  // Fetch recent tags from backend
+  const { data: recentTagsData } = useQuery({
+    queryKey: ["recentTags"],
+    queryFn: () =>
+      getData<null, { data: string[] }>("/transactions/tags/recent"),
+    select: (response) => response.data || [],
+  });
+
+  const recentTags = recentTagsData || [];
 
   const selectTagFun = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -283,7 +292,7 @@ const Page: NextPage = () => {
   }
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col xl:flex-row gap-md mt-8 px-md lg:px-xl">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-lg"
@@ -313,7 +322,7 @@ const Page: NextPage = () => {
             )}
           </div>
 
-          <div className="flex flex-row gap-md">
+          <div className="flex lg:flex-row flex-col gap-md">
             {/* transaction type */}
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
@@ -406,7 +415,7 @@ const Page: NextPage = () => {
           <h3 className="font-nunitosans font-bold text-text-1000 text-heading3 leading-[130%]">
             Categorization
           </h3>
-          <div className="flex flex-row gap-md">
+          <div className="flex flex-col sm:flex-row gap-md">
             {/* categories */}
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
@@ -487,7 +496,7 @@ const Page: NextPage = () => {
           <h3 className="font-nunitosans font-bold text-text-1000 text-heading3 leading-[130%]">
             Optional Details
           </h3>
-          <div className="flex flex-row gap-md">
+          <div className="flex lg:flex-row flex-col-reverse gap-md">
             {/* tags */}
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
@@ -582,21 +591,23 @@ const Page: NextPage = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-xxs">
-            <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
-              Recent Tags
-            </p>
-            <div className="flex flex-row flex-wrap gap-md">
-              {recentTags.map((tag, index) => (
-                <Tag
-                  key={index}
-                  text={tag}
-                  isSelected={false}
-                  selectTag={() => selectTagFun(tag)}
-                />
-              ))}
+          {recentTags.length > 0 && (
+            <div className="flex-1 flex flex-col gap-xxs">
+              <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
+                Recent Tags
+              </p>
+              <div className="flex flex-row flex-wrap gap-md">
+                {recentTags.map((tag, index) => (
+                  <Tag
+                    key={index}
+                    text={tag}
+                    isSelected={false}
+                    selectTag={() => selectTagFun(tag)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex-1 flex flex-col gap-xxs">
             <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
@@ -640,7 +651,7 @@ const Page: NextPage = () => {
       </form>
 
       <div className="flex flex-col gap-md">
-        <div className="flex flex-col gap-md py-lg px-md w-[442px] min-w-[300px] rounded-md bg-card-200">
+        <div className="flex flex-col gap-md py-lg px-md w-full xl:w-[442px] lg:min-w-[300px] rounded-md bg-card-200 mb-lg">
           <h4 className="font-nunitosans font-bold text-text-1000 text-heading3">
             Transaction Summary
           </h4>

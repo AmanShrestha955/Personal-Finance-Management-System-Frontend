@@ -189,7 +189,7 @@ const Page: NextPage = () => {
   }
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col xl:flex-row gap-md mt-8 px-md lg:px-xl">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-lg"
@@ -224,7 +224,7 @@ const Page: NextPage = () => {
             )}
           </div>
 
-          <div className="flex flex-row gap-md">
+          <div className="flex lg:flex-row flex-col gap-md">
             {/* Transaction Type */}
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
@@ -321,7 +321,7 @@ const Page: NextPage = () => {
           </div>
 
           {/* Start & End Date */}
-          <div className="flex flex-row gap-md">
+          <div className="flex flex-col sm:flex-row gap-md">
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
                 Start Date
@@ -355,7 +355,7 @@ const Page: NextPage = () => {
           <h3 className="font-nunitosans font-bold text-text-1000 text-heading3 leading-[130%]">
             Categorization
           </h3>
-          <div className="flex flex-row gap-md">
+          <div className="flex flex-col sm:flex-row gap-md">
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
                 Categories
@@ -458,7 +458,7 @@ const Page: NextPage = () => {
       </form>
 
       <div className="flex flex-col gap-md">
-        <div className="flex flex-col gap-md py-lg px-md w-[442px] min-w-[300px] rounded-md bg-card-200">
+        <div className="flex flex-col gap-md py-lg px-md w-full xl:w-[442px] lg:min-w-[300px] rounded-md bg-card-200 mb-lg">
           <h4 className="font-nunitosans font-bold text-text-1000 text-heading3">
             Transaction Summary
           </h4>

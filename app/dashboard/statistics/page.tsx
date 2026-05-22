@@ -6,7 +6,14 @@ import IncomeVsExpenses from "@/component/IncomeVsExpencesCard";
 import TransactionItem from "@/component/TransactionItem";
 import { TimeFilter, TimeOptionsDataType } from "@/types/type";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Download, FileText, Goal, TrendingUp } from "lucide-react";
+import {
+  Calendar,
+  Download,
+  FileText,
+  Goal,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 import { exportAsCSV, exportAsPDF } from "@/utils/exportApi";
 import { NextPage } from "next";
 import { useState } from "react";
@@ -20,6 +27,7 @@ import {
   getSavingGoals,
 } from "@/utils/statisticsApi";
 import { categoryColors, categoryIcons } from "@/utils/category";
+import { getFutureProjection } from "@/utils/statisticsApi";
 
 // interface Props {}
 
@@ -115,6 +123,11 @@ const Page: NextPage = ({}) => {
     },
   });
 
+  const { data: projectionData } = useQuery({
+    queryKey: ["future-projection"],
+    queryFn: () => getFutureProjection(),
+  });
+
   const onApplyFilters = () => {
     quaryClient.invalidateQueries({ queryKey: ["income-vs-expenses"] });
     quaryClient.invalidateQueries({ queryKey: ["expenses-data"] });
@@ -141,26 +154,92 @@ const Page: NextPage = ({}) => {
     }
   };
 
+  const getProjectionColor = (monthsNeeded: number) => {
+    if (monthsNeeded <= 3) {
+      return {
+        bg: "bg-green-200",
+        text: "text-green-600",
+      };
+    } else if (monthsNeeded <= 6) {
+      return {
+        bg: "bg-yellow-200",
+        text: "text-yellow-600",
+      };
+    } else {
+      return {
+        bg: "bg-red-200",
+        text: "text-red-600",
+      };
+    }
+  };
+
   return (
     <div className="w-full overflow-y-auto py-2xl px-xl flex flex-col gap-md bg-background-100 ">
       <h1 className="font-sansation text-heading font-semibold mb-md">
         Statistics
       </h1>
-      <div className="flex flex-row p-xl rounded-md bg-primary-500 font-nunitosans text-text-100">
-        <div className="flex flex-col gap-xs">
-          <div className="w-[48px] h-[48px] rounded-md bg-primary-300"></div>
-          <p className="text-body ">Future Projection</p>
-          <p className="text-heading2">Rs. 25,000</p>
-          <p className="text-body">
-            If you continue saving like this, in <b>2 months</b> you will reach
-            this goal.
-          </p>
-          <div className="flex flex-row px-md py-xs gap-sm items-center bg-primary-300 max-w-60 rounded-full">
-            <TrendingUp size={18} />
-            <p className="text-body ">+18% from last month</p>
+      {projectionData && projectionData.data.status !== "no_data" && (
+        <div
+          className={`flex flex-row p-xl rounded-md font-nunitosans text-text-100 ${
+            (projectionData.data.summary?.growthRate ?? 0) < 0
+              ? "bg-red-700"
+              : (projectionData.data.summary?.growthRate ?? 0) < 5
+                ? "bg-yellow-600"
+                : "bg-primary-500"
+          }`}
+        >
+          <div className="flex flex-col gap-xs flex-1">
+            <div
+              className={`w-[48px] h-[48px] rounded-md ${
+                (projectionData.data.summary?.growthRate ?? 0) < 5
+                  ? "bg-white/20"
+                  : "bg-primary-300"
+              }`}
+            ></div>
+            <p className="text-body">Future Projection</p>
+
+            <p className="text-heading2">
+              Rs.{" "}
+              {projectionData.data.summary?.projectedBalanceIn6Months.toLocaleString()}
+            </p>
+            <p className="text-body opacity-90">
+              {projectionData.data.summary?.description}
+            </p>
+
+            {/* Growth rate pill */}
+            <div
+              className={`flex flex-row px-md py-xs gap-sm items-center max-w-fit rounded-full ${
+                (projectionData.data.summary?.growthRate ?? 0) < 5
+                  ? "bg-white/20"
+                  : "bg-primary-300"
+              }`}
+            >
+              {(projectionData.data.summary?.growthRate ?? 0) >= 0 ? (
+                <TrendingUp size={18} />
+              ) : (
+                <TrendingDown size={18} />
+              )}
+              <p className="text-body">
+                {(projectionData.data.summary?.growthRate ?? 0) >= 0 ? "+" : ""}
+                {projectionData.data.summary?.growthRate}% monthly growth
+              </p>
+            </div>
+
+            {/* Alert */}
+            <div
+              className={`flex flex-row px-md py-xs gap-sm items-center max-w-fit rounded-full mt-xs ${
+                (projectionData.data.summary?.growthRate ?? 0) < 5
+                  ? "bg-white/20"
+                  : (projectionData.data.summary?.growthRate ?? 0) >= 5
+                    ? "bg-green-400/30"
+                    : "bg-primary-300"
+              }`}
+            >
+              <p className="text-body">{projectionData.data.alert.message}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <div className="flex flex-row px-lg py-md bg-card-100 rounded-xl justify-between font-nunitosans shadow-effect-2">
         <div className="flex flex-row flex-1 gap-xs items-center max-w-[700px] ">
           <Calendar size={18} />
@@ -230,7 +309,7 @@ const Page: NextPage = ({}) => {
             {period}&apos;s Money Highlights
           </p>
         </div>
-        <div className="flex flex-row gap-md">
+        <div className="flex flex-col md:flex-row gap-md">
           <div className="flex flex-1 flex-col p-md rounded-lg bg-background-100 gap-xxs font-nunitosans">
             <h1 className="text-text-800 text-body">Total Income</h1>
             <h2 className="text-text-1000 text-body">
@@ -275,7 +354,7 @@ const Page: NextPage = ({}) => {
           </div>
         </div>
       </div>
-      <div className="flex flex-row gap-md">
+      <div className="flex flex-col lg:flex-row gap-md">
         <div className="flex flex-col flex-1 gap-md">
           <div className="flex flex-col gap-lg p-2xl rounded-xl bg-card-100 shadow-effect-2 font-nunitosans">
             <h1 className="text-heading3 font-semibold text-text-1000 leading-[130%]">
@@ -332,92 +411,107 @@ const Page: NextPage = ({}) => {
             <div className="flex flex-row justify-center flex-wrap gap-lg">
               {/* card */}
               {savingGoals &&
-                savingGoals.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col p-lg rounded-xl shadow-effect-2 bg-card-100 gap-lg min-w-[440px]"
-                  >
-                    <div className="flex flex-row gap-sm">
-                      {/* icon */}
-                      <div
-                        className={`w-[48px] h-[48px] flex justify-center items-center p-sm rounded-lg text-white `}
-                        style={{
-                          backgroundColor:
-                            categoryColors[
-                              item.category as keyof typeof categoryColors
-                            ] ?? "#008944",
-                        }}
-                      >
-                        {categoryIcons[
-                          item.category as keyof typeof categoryIcons
-                        ] ? (
-                          categoryIcons[
-                            item.category as keyof typeof categoryIcons
-                          ]({})
-                        ) : (
-                          <div></div>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-0 items-start font-nunitosans">
-                        <p className="text-heading3 text-text-1000">
-                          {item.goalName}
-                        </p>
-                        <p className="text-body text-text-700 leading-[130%]">
-                          Rs.{" "}
-                          {item.currentSaving.toLocaleString("en-NP", {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          })}
-                          / Rs.{" "}
-                          {item.targetAmount.toLocaleString("en-NP", {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-xs">
-                      <div className="flex flex-row justify-between font-nunitosans">
-                        <p className="text-body text-text-8000 leading-[130%]">
-                          Progress
-                        </p>
-                        <p className="text-secondary-500 text-body leading-[130%]">
-                          {(item.currentSaving / item.targetAmount) * 100}%
-                        </p>
-                      </div>
-                      <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
+                savingGoals.map((item, index) => {
+                  const colors = getProjectionColor(
+                    item.projection.monthsNeeded ?? 999,
+                  );
+                  return (
+                    <div
+                      key={index}
+                      className="flex flex-col p-lg rounded-xl shadow-effect-2 bg-card-100 gap-lg min-w-[440px]"
+                    >
+                      <div className="flex flex-row gap-sm">
+                        {/* icon */}
                         <div
-                          className={`h-1 rounded-full bg-green-600`}
+                          className={`w-[48px] h-[48px] flex justify-center items-center p-sm rounded-lg text-white `}
                           style={{
-                            width: `${(item.currentSaving / item.targetAmount) * 100}%`,
+                            backgroundColor:
+                              categoryColors[
+                                item.category as keyof typeof categoryColors
+                              ] ?? "#008944",
                           }}
-                        ></div>
+                        >
+                          {categoryIcons[
+                            item.category as keyof typeof categoryIcons
+                          ] ? (
+                            categoryIcons[
+                              item.category as keyof typeof categoryIcons
+                            ]({})
+                          ) : (
+                            <div></div>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-0 items-start font-nunitosans">
+                          <p className="text-heading3 text-text-1000">
+                            {item.goalName}
+                          </p>
+                          <p className="text-body text-text-700 leading-[130%]">
+                            Rs.{" "}
+                            {item.currentSaving.toLocaleString("en-NP", {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            })}
+                            / Rs.{" "}
+                            {item.targetAmount.toLocaleString("en-NP", {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            })}
+                          </p>
+                        </div>
                       </div>
+                      <div className="flex flex-col gap-xs">
+                        <div className="flex flex-row justify-between font-nunitosans">
+                          <p className="text-body text-text-8000 leading-[130%]">
+                            Progress
+                          </p>
+                          <p className="text-secondary-500 text-body leading-[130%]">
+                            {(item.currentSaving / item.targetAmount) * 100}%
+                          </p>
+                        </div>
+                        <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
+                          <div
+                            className={`h-1 rounded-full bg-green-600`}
+                            style={{
+                              width: `${(item.currentSaving / item.targetAmount) * 100}%`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-0 p-sm rounded-lg bg-background-100 font-nunitosans">
+                        <p className="text-text-1000 text-body leading-[130%]">
+                          Remaining Amount
+                        </p>
+                        <p className="text-text-1000 text-heading3 leading-[130%]">
+                          Rs.{" "}
+                          {(
+                            item.targetAmount - item.currentSaving
+                          ).toLocaleString("en-NP", {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          })}
+                        </p>
+                      </div>
+                      {item.projection.status === "on_track" &&
+                        !item.isCompleted &&
+                        item.projection.monthsNeeded && (
+                          <div
+                            className={`flex flex-col gap-0 p-sm rounded-lg ${getProjectionColor(item.projection.monthsNeeded).bg} font-nunitosans`}
+                          >
+                            <p
+                              className={`${getProjectionColor(item.projection.monthsNeeded).text} text-body leading-[130%]`}
+                            >
+                              At this pace, you&apos;ll reach your goal by
+                            </p>
+                            <p
+                              className={`${getProjectionColor(item.projection.monthsNeeded).text} text-body font-bold leading-[130%]`}
+                            >
+                              {item.projection.projectedDateLabel}
+                            </p>
+                          </div>
+                        )}
                     </div>
-                    <div className="flex flex-col gap-0 p-sm rounded-lg bg-background-100 font-nunitosans">
-                      <p className="text-text-1000 text-body leading-[130%]">
-                        Remaining Amount
-                      </p>
-                      <p className="text-text-1000 text-heading3 leading-[130%]">
-                        Rs.{" "}
-                        {(
-                          item.targetAmount - item.currentSaving
-                        ).toLocaleString("en-NP", {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-0 p-sm rounded-lg bg-green-200 font-nunitosans">
-                      <p className="text-green-600 text-body leading-[130%]">
-                        At this pace, you&apos;ll reach your goal by
-                      </p>
-                      <p className="text-green-600 text-body font-bold leading-[130%]">
-                        March 2026
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -630,7 +724,7 @@ const Page: NextPage = ({}) => {
                 </p>
               </button>
             </div>
-            <p className="text-text-700 text-body text-wrap max-w-[360px]">
+            <p className="text-text-700 text-body text-wrap w-full lg:max-w-[360px]">
               Export your financial data for record keeping or share with your
               financial advisor. The export includes the last{" "}
               <span className="text-text-1000 font-semibold">12 months</span> of

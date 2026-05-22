@@ -149,7 +149,7 @@ const Page: NextPage = () => {
   }
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col lg:flex-row gap-md mt-8 px-md lg:px-xl">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-xl"
@@ -287,7 +287,7 @@ const Page: NextPage = () => {
       </form>
 
       <div className="flex flex-col gap-md">
-        <div className="flex flex-col gap-md py-lg px-md w-[442px] min-w-[300px] rounded-md bg-card-200">
+        <div className="flex flex-col gap-md py-lg px-md w-full lg:w-[442px] lg:min-w-[300px] rounded-md bg-card-200">
           <h4 className="font-nunitosans font-bold text-text-1000 text-heading3">
             Important Note
           </h4>
@@ -301,7 +301,7 @@ const Page: NextPage = () => {
         </div>
         {goalName && targetAmount ? (
           <div
-            className={`flex flex-col gap-md py-lg px-md max-w-[442px] rounded-md border border-card-200 bg-card-100 text-text-1000 shadow-effect-2`}
+            className={`flex flex-col gap-md py-lg px-md w-full lg:max-w-[442px] rounded-md border border-card-200 bg-card-100 text-text-1000 shadow-effect-2`}
           >
             <h4 className="font-nunitosans font-bold  text-heading3">
               Goal Progress Preview

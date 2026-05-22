@@ -7,6 +7,7 @@ import { FamilyMembers } from "@/component/FamilyMembers";
 import MoneyHighlights from "@/component/MoneyHighlights";
 import PieChartComponent from "@/component/PieChartComponent";
 import TransactionItem from "@/component/TransactionItem";
+import FilterCard, { FilterState } from "@/component/FilterCard";
 import { Category, TransactionDetail, TimeOptionsDataType } from "@/types/type";
 import {
   categoryColors,
@@ -45,12 +46,13 @@ import {
 import { TimeFilter } from "@/utils/homeApi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { ArrowRight, Plus, Users } from "lucide-react";
+import { ArrowRight, Plus, SearchIcon, Users } from "lucide-react";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Input from "@/component/Input";
+import FilterIcon from "@/component/icons/filter";
 
 const Page: NextPage = ({}) => {
   const owner = true; // Example ownership status
@@ -95,6 +97,44 @@ const Page: NextPage = ({}) => {
   const [transferNote, setTransferNote] = useState("");
   const queryClient = useQueryClient();
 
+  // ─── Family Transactions Filter State ──────────────────────────────────────
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setCurrentPage(1);
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      setSearchQuery(searchInput);
+      setCurrentPage(1);
+    }
+  };
+
+  const defaultFilters: FilterState = {
+    type: "all",
+    startDate: "",
+    endDate: "",
+    categories: [],
+  };
+  const [activeFilters, setActiveFilters] =
+    useState<FilterState>(defaultFilters);
+
+  const handleApplyFilters = (filters: FilterState) => {
+    setActiveFilters(filters);
+    setIsFilterOpen(false);
+    setCurrentPage(1);
+  };
+
+  const handleCancelFilter = () => {
+    setIsFilterOpen(false);
+  };
+
   // Ref and effect for horizontal scroll on the saving goals card ───────────────────────────────────────────────────────────────
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -129,12 +169,37 @@ const Page: NextPage = ({}) => {
   const hasNoFamily = isFamilyError || !family;
 
   // ─── Transactions ──────────────────────────────────────────────────────────
-  const { data: transactions = [] } = useQuery<FamilyTransaction[]>({
-    queryKey: ["familyTransactions", family?._id],
-    queryFn: () => getFamilyTransactions(family!._id),
+  const { data: transactionsData } = useQuery({
+    queryKey: [
+      "familyTransactions",
+      family?._id,
+      activeFilters,
+      searchQuery,
+      currentPage,
+    ],
+    queryFn: () => {
+      const filters = {
+        type: activeFilters.type as "all" | "income" | "expense",
+        startDate: activeFilters.startDate,
+        endDate: activeFilters.endDate,
+        category:
+          activeFilters.categories.length > 0
+            ? activeFilters.categories.join(",")
+            : undefined,
+        search: searchQuery || undefined,
+      };
+      return getFamilyTransactions(
+        family!._id,
+        filters,
+        currentPage,
+        itemsPerPage,
+      );
+    },
     enabled: !!family?._id,
     retry: false,
   });
+
+  const transactions = (transactionsData?.data as FamilyTransaction[]) || [];
 
   // ─── Transaction Summary ───────────────────────────────────────────────────
   const { data: summary } = useQuery({
@@ -270,7 +335,7 @@ const Page: NextPage = ({}) => {
       { week: "week4", amount: 0 },
       { week: "week5", amount: 0 },
     ];
-    transactions.forEach((t) => {
+    transactions.forEach((t: FamilyTransaction) => {
       if (t.type !== "expense") return;
       const day = new Date(t.transactionDate).getDate();
       const weekIndex = Math.min(Math.floor((day - 1) / 7), 4);
@@ -291,35 +356,28 @@ const Page: NextPage = ({}) => {
   // Recent transactions → map FamilyTransaction → TransactionDetail shape
   const recentTransactions: TransactionDetail[] = useMemo(
     () =>
-      [...transactions]
-        .sort(
-          (a, b) =>
-            new Date(b.transactionDate).getTime() -
-            new Date(a.transactionDate).getTime(),
-        )
-        .slice(0, 10)
-        .map((t) => ({
-          _id: t._id,
-          userId:
-            t.userId && typeof t.userId === "object" ? t.userId._id : t.userId,
-          accountId: t.accountId,
-          title: t.title,
-          amount: t.amount,
-          category: t.category,
-          transactionDate: new Date(t.transactionDate),
-          description: t.description ?? "",
-          type: t.type,
-          note: t.note ?? "",
-          receipt: t.receipt,
-          tags: t.tags ?? [],
-        })),
+      (transactions as FamilyTransaction[]).map((t: FamilyTransaction) => ({
+        _id: t._id,
+        userId:
+          t.userId && typeof t.userId === "object" ? t.userId._id : t.userId,
+        accountId: t.accountId,
+        title: t.title,
+        amount: t.amount,
+        category: t.category,
+        transactionDate: new Date(t.transactionDate),
+        description: t.description ?? "",
+        type: t.type,
+        note: t.note ?? "",
+        receipt: t.receipt,
+        tags: t.tags ?? [],
+      })),
     [transactions],
   );
 
   const totalSpending = top5Expenses.reduce((acc, e) => acc + e.amount, 0);
 
   return (
-    <div className="w-full overflow-y-auto py-2xl px-xl flex flex-col bg-background-100 gap-md font-nunitosans">
+    <div className="w-full overflow-y-auto py-2xl px-md md:px-xl flex flex-col bg-background-100 gap-md font-nunitosans">
       {/* ── Header ── */}
       <div className="flex flex-row justify-between items-end">
         <h1 className="font-sansation text-heading font-semibold">
@@ -331,7 +389,7 @@ const Page: NextPage = ({}) => {
               onClick={() =>
                 router.push("/dashboard/family-management/add-family")
               }
-              className="flex flex-row gap-md p-sm h-2xl rounded-md bg-primary-500 text-white font-semibold text-body items-center"
+              className="flex flex-row gap-md px-md py-xs rounded-md bg-primary-500 text-white font-semibold text-body items-center"
             >
               <Plus size={18} /> Create Family
             </button>
@@ -341,21 +399,9 @@ const Page: NextPage = ({}) => {
               onClick={() =>
                 router.push("/dashboard/family-management/manage-members")
               }
-              className="flex flex-row gap-md p-sm h-2xl rounded-md bg-primary-500 text-white font-semibold text-body items-center"
+              className="flex flex-row gap-md px-md py-xs rounded-md bg-primary-500 text-white font-semibold text-body items-center"
             >
               Manage Members
-            </button>
-          )}
-          {family && (
-            <button
-              onClick={() =>
-                router.push(
-                  "/dashboard/family-management/add-family-transaction",
-                )
-              }
-              className="flex flex-row gap-md p-sm h-2xl rounded-md bg-tag-1 text-white font-semibold text-body items-center"
-            >
-              <Plus size={18} /> Add Transaction
             </button>
           )}
         </div>
@@ -555,9 +601,9 @@ const Page: NextPage = ({}) => {
       {/* transfer Money to the family member form family member ------------------- */}
       <div className="flex flex-col gap-lg p-lg bg-card-100 shadow-effect-2 rounded-lg">
         <h1 className="text-heading2 font-bold">Money Transfer</h1>
-        <div className="flex flex-row gap-lg items-start">
+        <div className="flex flex-col lg:flex-row gap-lg items-start">
           {/* new Transfer form */}
-          <div className="flex-1 flex flex-col gap-md p-lg rounded-lg bg-card-200/50">
+          <div className="flex-1 w-full flex flex-col gap-md p-lg rounded-lg bg-card-200/50">
             <p className="capitalize text-[20px] font-bold">New Transfer</p>
             <form
               className="flex flex-col gap-md"
@@ -635,7 +681,7 @@ const Page: NextPage = ({}) => {
             </form>
           </div>
           {/* transfer history */}
-          <div className="flex-1 flex flex-col gap-md">
+          <div className="flex-1 w-full flex flex-col gap-md">
             {/* pending transfer history */}
             <div className="flex flex-col gap-md">
               <h2 className="font-nunitosans text-heading3 font-bold text-text-1000">
@@ -745,7 +791,7 @@ const Page: NextPage = ({}) => {
                             : "bg-[#FEF2F2] border-[#FECACA]"
                         }`}
                       >
-                        <div className="flex flex-row justify-between">
+                        <div className="flex flex-row gap-sm justify-between">
                           <div className="flex flex-row gap-sm">
                             <div className="flex flex-col gap-0 ">
                               <div className="flex flex-row gap-xs items-center">
@@ -797,11 +843,11 @@ const Page: NextPage = ({}) => {
       </div>
 
       {/* ── Analytics + Budget Alerts + Total Spending ── */}
-      <div className="flex flex-row gap-md items-start">
-        <div className="flex flex-col gap-md flex-1">
+      <div className="flex flex-col xl:flex-row gap-md items-start">
+        <div className="flex flex-col gap-md flex-1 w-full">
           {/* Analytics */}
           <div className="bg-card-100 flex-1 flex-col gap-xl p-2xl rounded-md shadow-effect-2 border border-card-200">
-            <div className="flex flex-row justify-between">
+            <div className="flex flex-row gap-sm justify-between flex-wrap">
               <h2 className="font-nunitosans text-heading2">Analytics</h2>
               <div className="flex flex-row gap-md">
                 <DropDown
@@ -856,7 +902,7 @@ const Page: NextPage = ({}) => {
                   : "No family budgets have been set up yet."}
               </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-md overflow-auto-x scrollbar [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full  [&::-webkit-scrollbar-thumb]:bg-primary-300 [&::-webkit-scrollbar-track]:bg-background-100/0">
                 {budgetSummary.map((b) => (
                   <BudgetAlertCard
                     key={b._id}
@@ -873,8 +919,8 @@ const Page: NextPage = ({}) => {
         </div>
 
         {/* Total Spending */}
-        <div className="flex flex-col gap-sm p-xl rounded-md border border-card-200 bg-card-100 shadow-effect-2">
-          <h1 className="min-w-[400px] font-nunitosans text-heading2 font-medium text-text-1000">
+        <div className="flex w-full xl:w-[400px] flex-col gap-sm p-xl rounded-md border border-card-200 bg-card-100 shadow-effect-2">
+          <h1 className="font-nunitosans text-heading2 font-medium text-text-1000">
             Total Spending
           </h1>
           <h1 className="font-nunitosans text-heading font-semibold text-red-600">
@@ -908,21 +954,51 @@ const Page: NextPage = ({}) => {
 
       {/* ── Recent Transactions ── */}
       <div className="flex flex-col gap-xs p-lg rounded-md shadow-effect-2 bg-card-100">
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center flex-wrap gap-sm z-20">
           <h2 className="font-nunitosans text-heading2 font-semibold text-text-1000">
             Recent Transactions
           </h2>
+          <div className="flex flex-row gap-sm px-xs py-xs border rounded-sm border-card-200 bg-card-100 shadow-effect-1 flex-1 min-w-[140px]">
+            <SearchIcon className="text-text-500 shrink-0" />
+            <input
+              type="search"
+              name="search"
+              placeholder="Search transactions"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 focus:outline-none text-text-1000 min-w-0"
+            />
+          </div>
           {family && (
-            <button
-              onClick={() =>
-                router.push(
-                  "/dashboard/family-management/add-family-transaction",
-                )
-              }
-              className="flex flex-row gap-sm p-sm h-xl rounded-md bg-primary-500 text-white font-semibold text-body items-center px-md"
-            >
-              <Plus size={16} /> Add Transaction
-            </button>
+            <div className="flex flex-row items-start gap-sm flex-wrap">
+              <div className="relative">
+                <button
+                  className={`flex flex-row rounded-md border border-card-300 items-center justify-between min-w-[90px] text-text-1000 px-sm py-xs shadow-effect-2 cursor-pointer hover:bg-card-200 ${
+                    isFilterOpen ? "bg-card-200" : ""
+                  } transition-all duration-300`}
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                >
+                  Filter <FilterIcon />
+                </button>
+                {isFilterOpen && (
+                  <FilterCard
+                    initialFilters={activeFilters}
+                    onApply={handleApplyFilters}
+                    onCancel={handleCancelFilter}
+                  />
+                )}
+              </div>
+              <button
+                onClick={() =>
+                  router.push(
+                    "/dashboard/family-management/add-family-transaction",
+                  )
+                }
+                className="flex flex-row gap-sm py-xs rounded-md bg-primary-500 text-white font-semibold text-body items-center px-md"
+              >
+                <Plus size={16} /> Add Transaction
+              </button>
+            </div>
           )}
         </div>
 
@@ -955,6 +1031,61 @@ const Page: NextPage = ({}) => {
             </tbody>
           </table>
         )}
+
+        {/* Pagination Controls */}
+        {transactionsData?.pagination &&
+          transactionsData.pagination.totalPages > 1 && (
+            <div className="flex flex-row justify-between items-center px-md py-md border-t border-card-200 flex-wrap gap-sm">
+              <p className="text-body text-text-700 font-nunitosans">
+                Page {transactionsData.pagination?.currentPage} of{" "}
+                {transactionsData.pagination?.totalPages} (
+                {transactionsData.pagination?.totalItems} total)
+              </p>
+              <div className="flex flex-row gap-sm">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-sm py-xxs rounded-sm border border-card-300 bg-card-100 text-text-1000 hover:bg-card-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                >
+                  Previous
+                </button>
+                <div className="flex flex-row gap-xs items-center">
+                  {Array.from(
+                    { length: transactionsData.pagination?.totalPages || 0 },
+                    (_, i) => i + 1,
+                  ).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-xs py-xxs rounded-sm border transition-all duration-300 ${
+                        currentPage === page
+                          ? "bg-primary-500 text-white border-primary-500"
+                          : "border-card-300 bg-card-100 text-text-1000 hover:bg-card-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() =>
+                    setCurrentPage(
+                      Math.min(
+                        transactionsData.pagination?.totalPages || 1,
+                        currentPage + 1,
+                      ),
+                    )
+                  }
+                  disabled={
+                    currentPage === transactionsData.pagination?.totalPages
+                  }
+                  className="px-sm py-xxs rounded-sm border border-card-300 bg-card-100 text-text-1000 hover:bg-card-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

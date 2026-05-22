@@ -1,104 +1,99 @@
 import React, { useState } from "react";
-import SavingIcon from "./icons/saving";
 import CheckmarkIcon from "./icons/checkmark";
 import { categoryWithIcon } from "@/utils/category";
 import { Category } from "@/types/type";
 
-const FilterCard = ({}) => {
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+export type FilterState = {
+  type: "all" | "income" | "expense";
+  startDate: string;
+  endDate: string;
+  categories: Category[];
+};
+
+type FilterCardProps = {
+  initialFilters: FilterState;
+  onApply: (filters: FilterState) => void;
+  onCancel: () => void;
+};
+
+const FilterCard = ({ initialFilters, onApply, onCancel }: FilterCardProps) => {
+  // Draft state — only committed to parent on Apply
+  const [draft, setDraft] = useState<FilterState>(initialFilters);
 
   const toggleCategory = (text: Category) => {
-    setSelectedCategories((prev) =>
-      prev.includes(text) ? prev.filter((c) => c !== text) : [...prev, text],
-    );
+    setDraft((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(text)
+        ? prev.categories.filter((c) => c !== text)
+        : [...prev.categories, text],
+    }));
   };
+
   return (
-    <div className="absolute right-0 top-[130%] flex flex-col items-start gap-md rounded-md border border-card-200 bg-card-100 py-xl px-lg shadow-effect-3">
+    <div className="lg:absolute right-0 top-[130%] flex flex-col items-start gap-md rounded-md border mt-2.5 border-card-200 bg-card-100 py-xl px-lg shadow-effect-3 z-50">
+      {/* Type */}
       <div className="flex flex-col gap-sm">
         <p className="font-nunitosans font-bold text-body text-text-1000 leading-[130%]">
           Type
         </p>
-        <div className="flex flex-row p-xxs bg-card-200 rounded-sm">
-          <div className="min-w-36">
-            <input
-              type="radio"
-              name="type"
-              id="all"
-              className="hidden peer"
-              defaultChecked={true}
-            />
-            <label
-              htmlFor="all"
-              className="block py-xxs peer-checked:bg-text-1000 peer-checked:text-text-100 font-nunitosans font-bold leading-[130%] cursor-pointer rounded-sm w-full text-center text-text-1000 duration-300 transition-colors"
-            >
-              All
-            </label>
-          </div>
-          <div className="min-w-36">
-            <input
-              type="radio"
-              name="type"
-              id="expenses"
-              className="hidden peer"
-            />
-            <label
-              htmlFor="expenses"
-              className="block py-xxs peer-checked:bg-text-1000 peer-checked:text-text-100 font-nunitosans font-bold leading-[130%] cursor-pointer rounded-sm w-full text-center text-text-1000 duration-300 transition-colors"
-            >
-              Expenses
-            </label>
-          </div>
-          <div className="min-w-36">
-            <input
-              type="radio"
-              name="type"
-              id="income"
-              className="hidden peer"
-            />
-            <label
-              htmlFor="income"
-              className="block py-xxs peer-checked:bg-text-1000 peer-checked:text-text-100 font-nunitosans font-bold leading-[130%] cursor-pointer rounded-sm w-full text-center text-text-1000 duration-300 transition-colors"
-            >
-              Income
-            </label>
-          </div>
+        <div className="flex flex-row p-xxs bg-card-200 rounded-sm flex-wrap lg:flex-nowrap">
+          {(["all", "expense", "income"] as const).map((t) => (
+            <div key={t} className="min-w-36">
+              <input
+                type="radio"
+                name="type"
+                id={`type-${t}`}
+                className="hidden peer"
+                checked={draft.type === t}
+                onChange={() => setDraft((prev) => ({ ...prev, type: t }))}
+              />
+              <label
+                htmlFor={`type-${t}`}
+                className="block py-xs peer-checked:bg-text-1000 peer-checked:text-text-100 font-nunitosans font-bold leading-[130%] cursor-pointer rounded-sm w-full text-center text-text-1000 duration-300 transition-colors capitalize"
+              >
+                {t === "all" ? "All" : t === "expense" ? "Expenses" : "Income"}
+              </label>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Date range */}
       <div className="flex flex-col gap-sm w-full">
         <p className="font-nunitosans font-bold text-body text-text-1000 leading-[130%]">
           Date
         </p>
-        <div className="flex flex-row gap-xs">
+        <div className="flex flex-row flex-wrap gap-xs items-center">
           <input
             type="date"
-            name="from"
-            className="flex-1 text-body text-text-1000 font-nunitosans font-normal leading-[130%] px-xs py-xxs border border-card-200 bg-card-100 rounded-sm shadow-effect-1"
-            id=""
+            value={draft.startDate}
+            onChange={(e) =>
+              setDraft((prev) => ({ ...prev, startDate: e.target.value }))
+            }
+            className="flex-1 text-body text-text-1000 font-nunitosans font-normal leading-[130%] px-xs py-xs border border-card-200 bg-card-100 rounded-sm shadow-effect-1"
           />
           <p className="font-nunitosans font-bold text-body leading-[130%] text-text-300 text-center">
-            _
+            –
           </p>
           <input
             type="date"
-            name="to"
-            id=""
-            className="flex-1 text-body text-text-1000 font-nunitosans font-normal leading-[130%] px-xs py-xxs border border-card-200 bg-card-100 rounded-sm shadow-effect-1"
+            value={draft.endDate}
+            onChange={(e) =>
+              setDraft((prev) => ({ ...prev, endDate: e.target.value }))
+            }
+            className="flex-1 text-body text-text-1000 font-nunitosans font-normal leading-[130%] px-xs py-xs border border-card-200 bg-card-100 rounded-sm shadow-effect-1"
           />
         </div>
       </div>
+
+      {/* Categories */}
       <div className="flex flex-col gap-sm">
         <p className="font-nunitosans font-bold text-body text-text-1000 leading-[130%]">
           Categories
         </p>
         <div className="flex flex-row flex-wrap gap-2.5">
-          <input
-            type="checkbox"
-            name="categories"
-            id="categorie"
-            className="hidden peer"
-          />
           {categoryWithIcon.map(({ text, icon: Icon }) => {
-            const isSelected = selectedCategories.includes(text);
+            const isSelected = draft.categories.includes(text);
             return (
               <button
                 key={text}
@@ -119,11 +114,21 @@ const FilterCard = ({}) => {
           })}
         </div>
       </div>
+
+      {/* Actions */}
       <div className="flex flex-row gap-sm justify-end w-full">
-        <button className="border-[0.5px] border-card-200 rounded-sm px-sm min-w-[133px] py-xxs text-text-1000 text-body font-nunitosans font-medium leading-[130%] shadow-effect-1">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="border-[0.5px] border-card-200 rounded-sm px-sm min-w-[133px] py-xs text-text-1000 text-body font-nunitosans font-medium leading-[130%] shadow-effect-1"
+        >
           Cancel
         </button>
-        <button className="border-[0.5px] border-card-200 rounded-sm px-sm min-w-[133px] py-xxs text-text-100 bg-card-900 text-body font-nunitosans font-medium leading-[130%] shadow-effect-1">
+        <button
+          type="button"
+          onClick={() => onApply(draft)}
+          className="border-[0.5px] border-card-200 rounded-sm px-sm min-w-[133px] py-xs text-text-100 bg-card-900 text-body font-nunitosans font-medium leading-[130%] shadow-effect-1"
+        >
           Apply
         </button>
       </div>

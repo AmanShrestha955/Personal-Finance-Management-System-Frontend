@@ -59,7 +59,7 @@ const AdminSignInPage: NextPage = () => {
     <div className="flex flex-col lg:flex-row gap-0 w-screen h-screen p-sm bg-background-100">
       {/* left side */}
       <div className="flex-1">
-        <div className="flex flex-col px-3xl py-2xl lg:px-6xl lg:py-5xl gap-md">
+        <div className="flex flex-col px-md py-2xl sm:px-3xl lg:px-6xl lg:py-5xl gap-md">
           <div className="flex flex-col gap-xs">
             <h1 className="text-heading2 font-sansation font-bold text-text-1000 leading-[100%]">
               Admin Portal

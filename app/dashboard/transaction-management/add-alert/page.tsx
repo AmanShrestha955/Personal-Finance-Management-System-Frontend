@@ -204,7 +204,7 @@ const Page: NextPage = ({}) => {
   }
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col lg:flex-row gap-md mt-8 px-md lg:px-xl flex-wrap">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-lg"
@@ -326,9 +326,9 @@ const Page: NextPage = ({}) => {
           </button>
         </div>
       </form>
-      <div className="flex flex-col gap-md">
+      <div className="flex flex-col gap-md w-full lg:w-auto">
         {/* important note */}
-        <div className="flex flex-col gap-md px-lg py-2xl bg-card-200 rounded-md max-w-[445px] shadow-effect-2">
+        <div className="flex flex-col gap-md px-lg py-2xl bg-card-200 rounded-md lg:max-w-[445px] w-full shadow-effect-2">
           <h1 className="font-nunitosans font-bold text-heading3 text-text-1000">
             Important Note
           </h1>

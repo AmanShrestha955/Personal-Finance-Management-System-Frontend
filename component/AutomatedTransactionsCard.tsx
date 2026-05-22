@@ -24,7 +24,7 @@ const AutomatedTransactionsCard = ({
     },
   });
   return (
-    <div className="flex flex-col px-lg py-md gap-md bg-card-100 rounded-md border border-card-200 shadow-effect-2 min-w-100 max-w-[420px]">
+    <div className="flex flex-col px-lg py-md gap-md bg-card-100 rounded-md border border-card-200 shadow-effect-2 min-w-100 xl:max-w-[420px]">
       <div className="flex flex-col gap-xxs">
         <h2 className="font-nunitosans font-bold text-heading3 leading-[130%] text-text-1000">
           Automated Transactions

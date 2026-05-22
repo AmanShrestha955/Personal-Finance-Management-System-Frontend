@@ -100,15 +100,53 @@ export const createFamilyTransaction = async (
   );
 };
 
-/** GET /api/families/:familyId/transactions — Get all transactions */
+/** GET /api/families/:familyId/transactions — Get all transactions with optional filters */
 export const getFamilyTransactions = async (
   familyId: string,
-): Promise<FamilyTransaction[]> => {
+  filters?: {
+    type?: "all" | "income" | "expense";
+    startDate?: string;
+    endDate?: string;
+    category?: string;
+    search?: string;
+  },
+  page: number = 1,
+  limit: number = 10,
+): Promise<{
+  data: FamilyTransaction[];
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
+}> => {
+  const params = new URLSearchParams();
+  if (filters?.type) params.set("type", filters.type);
+  if (filters?.startDate) params.set("startDate", filters.startDate);
+  if (filters?.endDate) params.set("endDate", filters.endDate);
+  if (filters?.category) params.set("category", filters.category);
+  if (filters?.search) params.set("search", filters.search);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
   const response = await getData<
     null,
-    { message: string; data: FamilyTransaction[] }
-  >(`/families/${familyId}/transactions`);
-  return response.data;
+    {
+      message: string;
+      data: FamilyTransaction[];
+      pagination?: {
+        currentPage: number;
+        totalPages: number;
+        totalItems: number;
+        itemsPerPage: number;
+      };
+    }
+  >(`/families/${familyId}/transactions?${params.toString()}`);
+  return {
+    data: response.data,
+    pagination: response.pagination,
+  };
 };
 
 /** GET /api/families/:familyId/transactions/summary — Income / expense / balance totals */
@@ -155,4 +193,14 @@ export const deleteFamilyTransaction = async (
     `/families/${familyId}/transactions/${transactionId}`,
   );
   return response.message;
+};
+
+/** GET /api/families/:familyId/transactions/tags/recent — Get recent tags from last 30 transactions */
+export const getFamilyRecentTags = async (
+  familyId: string,
+): Promise<string[]> => {
+  const response = await getData<null, { message: string; data: string[] }>(
+    `/families/${familyId}/transactions/tags/recent`,
+  );
+  return response.data;
 };

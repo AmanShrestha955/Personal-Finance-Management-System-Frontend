@@ -167,6 +167,49 @@ type BudgetData = {
   data: BudgetDetail[];
 };
 
+// ============================================
+// Future Projection Types
+// ============================================
+
+type ProjectionAlert = {
+  type: "success" | "warning" | "danger" | "info";
+  message: string;
+};
+
+type MonthlyDataItem = {
+  month: string;
+  income: number;
+  expenses: number;
+  savings: number;
+  hasData: boolean;
+};
+
+type ProjectionItem = {
+  month: string;
+  projectedSavings: number;
+  projectedBalance: number;
+};
+
+type ProjectionSummary = {
+  currentBalance: number;
+  avgMonthlySavings: number;
+  growthRate: number;
+  projectedBalanceIn6Months: number;
+  description: string;
+};
+
+export type FutureProjectionResponse = {
+  message: string;
+  data: {
+    status: "projected" | "no_data";
+    monthsUsed?: number;
+    summary?: ProjectionSummary;
+    alert: ProjectionAlert;
+    monthlyData: MonthlyDataItem[];
+    projections?: ProjectionItem[];
+  };
+};
+
 export const getMoneyHighlights = async (period: TimeOptionsDataType) => {
   const response = await getData<null, MoneyHighlightsResponse>(
     `/stats/money-highlights?period=${period}`,
@@ -195,6 +238,14 @@ export const getBudgets = async () => {
   const response = await getData<null, BudgetData>("/budgets/");
   return response.data;
 };
+
+export const getFutureProjection =
+  async (): Promise<FutureProjectionResponse> => {
+    const response = await getData<null, FutureProjectionResponse>(
+      "/stats/projection",
+    );
+    return response;
+  };
 
 export { getExpensesByTimePeriod };
 

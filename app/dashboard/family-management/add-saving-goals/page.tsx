@@ -162,7 +162,7 @@ const Page: NextPage = () => {
   }
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col lg:flex-row gap-md mt-8 px-md lg:px-xl">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-xl"
@@ -290,15 +290,15 @@ const Page: NextPage = () => {
       </form>
 
       <div className="flex flex-col gap-md">
-        <div className="flex flex-col gap-md py-lg px-md w-[442px] min-w-[300px] rounded-md bg-card-200">
+        <div className="flex flex-col gap-md py-lg px-md w-full lg:w-[442px] lg:min-w-[300px] rounded-md bg-card-200">
           <h4 className="font-nunitosans font-bold text-text-1000 text-heading3">
             Important Note
           </h4>
           <p className="font-nunitosans text-text-1000 text-body leading-[110%]">
             Family saving goals allow your entire family to contribute towards a
             common objective. Track progress together and see how close you are
-            to achieving your shared goal. All family members can contribute, and
-            the goal owner can manage the goal details.
+            to achieving your shared goal. All family members can contribute,
+            and the goal owner can manage the goal details.
           </p>
         </div>
       </div>

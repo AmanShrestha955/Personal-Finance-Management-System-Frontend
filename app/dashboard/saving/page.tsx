@@ -49,8 +49,8 @@ const Page: NextPage = ({}) => {
     return [];
   }, [selectedFilter, savingGoals]);
   return (
-    <div className="w-full overflow-y-auto py-2xl px-xl flex flex-col bg-background-100 gap-xl ">
-      <div className="flex flex-row justify-between items-end">
+    <div className="w-full overflow-y-auto py-2xl px-md md:px-xl flex flex-col bg-background-100 gap-xl">
+      <div className="flex flex-row justify-between items-end flex-wrap">
         <div className="flex flex-col gap-md">
           <h1 className="font-sansation text-heading font-semibold">
             Saving Goals
@@ -72,7 +72,7 @@ const Page: NextPage = ({}) => {
         </button>
       </div>
       {/* SavingInfoCard */}
-      <div className="flex flex-row items-start gap-xl ">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
         <SavingInfoCard
           name="Total Saved"
           value={`Rs ${savingGoalsStats ? savingGoalsStats.totalSaved.amount.toFixed(2) : "0.00"}`}
@@ -109,7 +109,7 @@ const Page: NextPage = ({}) => {
         <h1 className="font-nunitosans font-bold text-heading2 text-text-1000">
           Your Saving Goals
         </h1>
-        <div className="flex flex-row gap-md justify-start font-nunitosans font-bold text-text-600">
+        <div className="flex flex-row gap-sm md:gap-md justify-start font-nunitosans font-bold text-text-600 overflow-x-auto">
           {filterOptions.map((option) => (
             <div key={option}>
               <input
@@ -123,7 +123,7 @@ const Page: NextPage = ({}) => {
               />
               <label
                 htmlFor={option}
-                className="peer-checked:text-primary-600 w-[200px] py-xxs text-center inline-block cursor-pointer border-b-2 border-b-primary-600/0 peer-checked:border-b-primary-600 transition-all duration-300"
+                className="peer-checked:text-primary-600 w-full sm:w-[200px] py-xxs text-center inline-block cursor-pointer border-b-2 border-b-primary-600/0 peer-checked:border-b-primary-600 transition-all duration-300"
               >
                 {option}
               </label>
@@ -131,23 +131,59 @@ const Page: NextPage = ({}) => {
           ))}
         </div>
         <div className="flex flex-col gap-md">
+          {isLoadingSavingGoals ? (
+            <div className="flex flex-col items-center justify-center py-2xl gap-sm">
+              <div className="w-8 h-8 rounded-full border-4 border-primary-500 border-t-transparent animate-spin" />
+              <p className="font-nunitosans text-body text-text-600">
+                Loading saving goals...
+              </p>
+            </div>
+          ) : filteredSavingGoals.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-2xl gap-md">
+              <p className="font-nunitosans font-bold text-heading3 text-text-600">
+                {selectedFilter === "Completed"
+                  ? "No completed goals yet"
+                  : selectedFilter === "In Progress"
+                    ? "No goals in progress"
+                    : "No saving goals yet"}
+              </p>
+              <p className="font-nunitosans text-body text-text-600">
+                {selectedFilter === "All"
+                  ? "Start by creating your first saving goal"
+                  : "Try switching to a different filter"}
+              </p>
+              {selectedFilter === "All" && (
+                <button
+                  onClick={() => navigator.push("/dashboard/saving/add-goal")}
+                  className="flex flex-row items-center gap-sm px-md py-xs bg-primary-500 rounded-sm shadow-effect-2 hover:bg-primary-600 transition-all duration-300 cursor-pointer"
+                >
+                  <Plus size={14} className="text-text-100" />
+                  <p className="font-nunitosans font-medium text-body text-text-100 leading-[130%]">
+                    Create Saving Goal
+                  </p>
+                </button>
+              )}
+            </div>
+          ) : (
+            filteredSavingGoals.map((goal) => (
+              <SavingGoalDetailCard
+                key={goal._id}
+                id={goal._id}
+                goalName={goal.goalName}
+                targetAmount={goal.targetAmount}
+                currentSaving={goal.currentSaving}
+                deadline={new Date(goal.deadline).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+                category={goal.category}
+                isCompleted={goal.isCompleted}
+                projection={goal.projection}
+              />
+            ))
+          )}
           {/* savingGoalDetailCard */}
-          {filteredSavingGoals?.map((goal) => (
-            <SavingGoalDetailCard
-              key={goal._id}
-              id={goal._id}
-              goalName={goal.goalName}
-              targetAmount={goal.targetAmount}
-              currentSaving={goal.currentSaving}
-              deadline={new Date(goal.deadline).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-              category={goal.category}
-              isCompleted={goal.isCompleted}
-            />
-          ))}
         </div>
       </div>
     </div>

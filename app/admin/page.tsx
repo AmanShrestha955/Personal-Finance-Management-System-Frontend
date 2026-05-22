@@ -321,7 +321,7 @@ export default function AdminDashboard() {
               </p>
             </Link>
 
-            <Link
+            {/* <Link
               href="/admin/transactions"
               className="block p-4 border border-text-300 rounded-lg hover:shadow-md hover:border-primary-500 transition-all duration-200"
             >
@@ -331,7 +331,7 @@ export default function AdminDashboard() {
               <p className="text-text-600 font-nunitosans text-sm">
                 Monitor all system transactions
               </p>
-            </Link>
+            </Link> */}
 
             <Link
               href="/admin/families"

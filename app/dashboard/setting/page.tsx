@@ -46,14 +46,14 @@ const Page: NextPage = ({}) => {
   }, [userData]);
   const router = useRouter();
   return (
-    <div className="w-full overflow-y-auto py-2xl px-xl flex flex-col bg-background-100 gap-xl ">
+    <div className="w-full overflow-y-auto py-2xl px-md md:px-xl flex flex-col bg-background-100 gap-xl">
       <div className="flex flex-row justify-between items-end">
         <h1 className="font-sansation text-heading font-semibold">Profile</h1>
       </div>
       {/* first row */}
-      <div className="flex flex-row gap-md ">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
         {/* card */}
-        <div className="flex flex-col flex-1 gap-xl font-nunitosans bg-card-100 rounded-xl p-lg min-w-[400px] shadow-effect-2">
+        <div className="flex flex-col flex-1 gap-xl font-nunitosans bg-card-100 rounded-xl p-lg shadow-effect-2">
           <div className="flex flex-row justify-between">
             <div className="flex flex-col text-body">
               <p className="text-text-700">Total Spend This Month</p>
@@ -74,7 +74,7 @@ const Page: NextPage = ({}) => {
             </p>
           </div>
         </div>
-        <div className="flex flex-col flex-1 gap-xl font-nunitosans bg-card-100 rounded-xl p-lg min-w-[400px] shadow-effect-2">
+        <div className="flex flex-col flex-1 gap-xl font-nunitosans bg-card-100 rounded-xl p-lg shadow-effect-2">
           <div className="flex flex-row justify-between">
             <div className="flex flex-col text-body">
               <p className="text-text-700">Total Income</p>
@@ -93,7 +93,7 @@ const Page: NextPage = ({}) => {
             <p>{moneyHighlightsData?.totalIncome.change.value} vs last month</p>
           </div>
         </div>
-        <div className="flex flex-col flex-1 gap-xl font-nunitosans bg-card-100 rounded-xl p-lg min-w-[400px] shadow-effect-2">
+        <div className="flex flex-col flex-1 gap-xl font-nunitosans bg-card-100 rounded-xl p-lg shadow-effect-2">
           <div className="flex flex-row justify-between">
             <div className="flex flex-col text-body">
               <p className="text-text-700">Savings This Month</p>
@@ -116,7 +116,7 @@ const Page: NextPage = ({}) => {
         </div>
       </div>
       {/* second row */}
-      <div className="flex flex-row justify-between items-center py-lg px-xl rounded-xl shadow-effect-2 bg-card-100">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md py-lg px-md md:px-xl rounded-xl shadow-effect-2 bg-card-100">
         <div className="flex flex-row gap-lg">
           <Image
             width={96}
@@ -156,7 +156,7 @@ const Page: NextPage = ({}) => {
         <div className="h-px w-full bg-card-200"></div>
         {/* info */}
         <div className="flex flex-col gap-lg font-nunitosans">
-          <div className="flex flex-row flex-1 gap-lg">
+          <div className="flex flex-col sm:flex-row flex-1 gap-lg">
             <div className="flex flex-col flex-1 gap-xs">
               <p className="text-body text-text-1000">Full Name</p>
               <p className="text-body text-text-700 w-full p-xs border border-card-200 rounded-sm capitalize">
@@ -199,7 +199,7 @@ const Page: NextPage = ({}) => {
         </div>
         <div className="h-px w-full bg-card-200"></div>
         {/* change password */}
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between gap-sm sm:items-center">
           <div className="flex flex-col">
             <p className="text-body text-text-1000">Change Password</p>
             <p className="text-body text-text-700">

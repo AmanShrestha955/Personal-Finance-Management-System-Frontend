@@ -9,6 +9,7 @@ import {
   createFamilyTransaction,
   updateFamilyTransaction,
   getFamilyTransactionById,
+  getFamilyRecentTags,
   CreateFamilyTransactionPayload,
   FamilyTransaction,
 } from "@/utils/familyTransactionApi";
@@ -92,8 +93,9 @@ const Page: NextPage = () => {
     icon: OthersIcon,
   };
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] =
-    useState<(typeof categoryOptions)[0]>(defaultCategory as (typeof categoryOptions)[0]);
+  const [selectedCategory, setSelectedCategory] = useState<
+    (typeof categoryOptions)[0]
+  >(defaultCategory as (typeof categoryOptions)[0]);
 
   const paymentOptions = [
     { text: "Cash" },
@@ -108,7 +110,15 @@ const Page: NextPage = () => {
   // ─── Tags & Receipt ────────────────────────────────────────────────────────
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
-  const recentTags = ["groceries", "bills", "travel", "utilities"];
+
+  // Fetch recent tags from backend
+  const { data: recentTagsData } = useQuery<string[]>({
+    queryKey: ["familyRecentTags", family?._id],
+    queryFn: () => getFamilyRecentTags(family!._id),
+    enabled: !!family?._id,
+  });
+
+  const recentTags = recentTagsData || [];
 
   const selectTag = (tag: string) => {
     if (selectedTags.includes(tag)) return;
@@ -238,7 +248,7 @@ const Page: NextPage = () => {
   }
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col lg:flex-row gap-md mt-8 px-md lg:px-xl">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-lg"
@@ -269,7 +279,7 @@ const Page: NextPage = () => {
             )}
           </div>
 
-          <div className="flex flex-row gap-md">
+          <div className="flex flex-col sm:flex-row gap-md">
             {/* Transaction Type */}
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
@@ -363,7 +373,7 @@ const Page: NextPage = () => {
             Categorization
           </h3>
 
-          <div className="flex flex-row gap-md">
+          <div className="flex flex-col sm:flex-row gap-md">
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
                 Category
@@ -441,7 +451,7 @@ const Page: NextPage = () => {
             Optional Details
           </h3>
 
-          <div className="flex flex-row gap-md">
+          <div className="flex flex-col sm:flex-row gap-md">
             {/* Tags */}
             <div className="flex-1 flex flex-col gap-xxs">
               <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
@@ -529,21 +539,23 @@ const Page: NextPage = () => {
           </div>
 
           {/* Recent Tags */}
-          <div className="flex-1 flex flex-col gap-xxs">
-            <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
-              Recent Tags
-            </p>
-            <div className="flex flex-row flex-wrap gap-md">
-              {recentTags.map((tag, i) => (
-                <Tag
-                  key={i}
-                  text={tag}
-                  isSelected={false}
-                  selectTag={() => selectTag(tag)}
-                />
-              ))}
+          {recentTags.length > 0 && (
+            <div className="flex-1 flex flex-col gap-xxs">
+              <p className="text-text-1000 text-body leading-[130%] font-nunitosans font-bold">
+                Recent Tags
+              </p>
+              <div className="flex flex-row flex-wrap gap-md">
+                {recentTags.map((tag, i) => (
+                  <Tag
+                    key={i}
+                    text={tag}
+                    isSelected={false}
+                    selectTag={() => selectTag(tag)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Notes */}
           <div className="flex-1 flex flex-col gap-xxs">
@@ -588,7 +600,7 @@ const Page: NextPage = () => {
 
       {/* ── Sidebar Summary ── */}
       <div className="flex flex-col gap-md">
-        <div className="flex flex-col gap-md py-lg px-md w-[442px] min-w-[300px] rounded-md bg-card-200">
+        <div className="flex flex-col gap-md py-lg px-md w-full lg:w-[442px] lg:min-w-[300px] rounded-md bg-card-200">
           <h4 className="font-nunitosans font-bold text-text-1000 text-heading3">
             Transaction Summary
           </h4>

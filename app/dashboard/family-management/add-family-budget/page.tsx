@@ -12,7 +12,10 @@ import {
   getFamilyBudgetById,
   FamilyBudget,
 } from "@/utils/familyBudgetApi";
-import { getFamilyTransactions as fetchFamilyTxns } from "@/utils/familyTransactionApi";
+import {
+  getFamilyTransactions as fetchFamilyTxns,
+  FamilyTransaction,
+} from "@/utils/familyTransactionApi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
@@ -58,7 +61,10 @@ const Page: NextPage = () => {
   const categoryOptions = categoryWithIcon;
   const defaultCategory = { text: "Select Category", icon: OthersIcon };
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<{ text: string; icon: React.ComponentType }>(defaultCategory);
+  const [selectedCategory, setSelectedCategory] = useState<{
+    text: string;
+    icon: React.ComponentType;
+  }>(defaultCategory);
 
   // ─── Fetch family ──────────────────────────────────────────────────────────
   const { data: family } = useQuery<Family, AxiosError>({
@@ -94,12 +100,14 @@ const Page: NextPage = () => {
   // ─── Family transactions — used for spend preview bar ─────────────────────
   // We derive category spend from the transactions we already have cached,
   // avoiding an extra analytics endpoint that doesn't exist on the family API.
-  const { data: transactions = [] } = useQuery({
+  const { data: transactionResponse } = useQuery({
     queryKey: ["familyTransactions", family?._id],
     queryFn: () => fetchFamilyTxns(family!._id),
     enabled: !!family?._id,
     retry: false,
   });
+
+  const transactions = transactionResponse?.data ?? [];
 
   // Current month spend for the selected category
   const categorySpend = useMemo(() => {
@@ -107,19 +115,21 @@ const Page: NextPage = () => {
     const now = new Date();
     return transactions
       .filter(
-        (t) =>
+        (t: FamilyTransaction) =>
           t.type === "expense" &&
           t.category === category &&
           new Date(t.transactionDate).getMonth() === now.getMonth() &&
           new Date(t.transactionDate).getFullYear() === now.getFullYear(),
       )
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum: number, t: FamilyTransaction) => sum + t.amount, 0);
   }, [transactions, category]);
 
   // Update preview percentage whenever spend or budget amount changes
   useEffect(() => {
     const pct =
-      budgetAmt > 0 ? Math.min((categorySpend / Number(budgetAmt)) * 100, 100) : 0;
+      budgetAmt > 0
+        ? Math.min((categorySpend / Number(budgetAmt)) * 100, 100)
+        : 0;
     setSpendingPercentage(pct);
   }, [categorySpend, budgetAmt]);
 
@@ -132,13 +142,18 @@ const Page: NextPage = () => {
         alertThreshold: Number(data.alertThreshold),
       }),
     onSuccess: () => {
-      addNotification("success", "Created Budget Alert", "Family budget created successfully.");
+      addNotification(
+        "success",
+        "Created Budget Alert",
+        "Family budget created successfully.",
+      );
       queryClient.invalidateQueries({ queryKey: ["familyBudgetSummary"] });
       router.push("/dashboard/family-management");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
       const message =
-        error?.response?.data?.message ?? "An error occurred while saving the budget.";
+        error?.response?.data?.message ??
+        "An error occurred while saving the budget.";
       addNotification("error", "Error", message);
     },
   });
@@ -151,14 +166,19 @@ const Page: NextPage = () => {
         alertThreshold: Number(data.alertThreshold),
       }),
     onSuccess: () => {
-      addNotification("success", "Updated Budget Alert", "Family budget updated successfully.");
+      addNotification(
+        "success",
+        "Updated Budget Alert",
+        "Family budget updated successfully.",
+      );
       queryClient.invalidateQueries({ queryKey: ["familyBudgetSummary"] });
       queryClient.invalidateQueries({ queryKey: ["familyBudget", budgetId] });
       router.push("/dashboard/family-management");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
       const message =
-        error?.response?.data?.message ?? "An error occurred while updating the budget.";
+        error?.response?.data?.message ??
+        "An error occurred while updating the budget.";
       addNotification("error", "Error", message);
     },
   });
@@ -188,7 +208,7 @@ const Page: NextPage = () => {
     isSubmitting || createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="flex flex-row gap-md mt-8 mr-[32px]">
+    <div className="flex flex-col lg:flex-row gap-md mt-8 px-md lg:px-xl">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col gap-lg"
@@ -262,8 +282,14 @@ const Page: NextPage = () => {
               type="number"
               prefix="%"
               {...register("alertThreshold", {
-                max: { value: 100, message: "Alert threshold can't exceed 100." },
-                min: { value: 0, message: "Alert threshold can't be negative." },
+                max: {
+                  value: 100,
+                  message: "Alert threshold can't exceed 100.",
+                },
+                min: {
+                  value: 0,
+                  message: "Alert threshold can't be negative.",
+                },
               })}
             />
             {errors.alertThreshold && (
@@ -303,9 +329,9 @@ const Page: NextPage = () => {
       </form>
 
       {/* ── Sidebar ── */}
-      <div className="flex flex-col gap-md">
+      <div className="flex flex-col gap-md w-full lg:w-auto">
         {/* Important Note */}
-        <div className="flex flex-col gap-md px-lg py-2xl bg-card-200 rounded-md max-w-[445px] shadow-effect-2">
+        <div className="flex flex-col gap-md px-lg py-2xl bg-card-200 rounded-md w-full lg:max-w-[445px] shadow-effect-2">
           <h1 className="font-nunitosans font-bold text-heading3 text-text-1000">
             Important Note
           </h1>
