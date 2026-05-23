@@ -9,14 +9,14 @@ import { SignUpData, SignUpForm } from "@/types/type";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/utils/request";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { AxiosError } from "axios";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { LoginData } from "@/types/type";
 
-const Page: NextPage = () => {
+const PageContent: NextPage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [googleError, setGoogleError] = useState("");
@@ -42,7 +42,7 @@ const Page: NextPage = () => {
     onError: (error: AxiosError | any) => {
       setErrorMessage(
         error.response?.data?.message ||
-          "Something went wrong. Please try again."
+          "Something went wrong. Please try again.",
       );
     },
   });
@@ -69,7 +69,7 @@ const Page: NextPage = () => {
     onError: (error: any) => {
       setGoogleError(
         error.response?.data?.message ||
-          "Google sign-up failed. Please try again."
+          "Google sign-up failed. Please try again.",
       );
     },
   });
@@ -301,7 +301,10 @@ const Page: NextPage = () => {
 
           <p className="text-caption text-center font-nunitosans font-medium text-text-1000 leading-[100%]">
             Already have an account?{" "}
-            <Link href="/sign-in" className="text-primary-400 font-bold hover:underline">
+            <Link
+              href="/sign-in"
+              className="text-primary-400 font-bold hover:underline"
+            >
               Sign in
             </Link>
           </p>
@@ -327,6 +330,14 @@ const Page: NextPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const Page: NextPage = () => {
+  return (
+    <Suspense fallback={null}>
+      <PageContent />
+    </Suspense>
   );
 };
 

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import {
@@ -15,11 +15,7 @@ import { BackendErrorResponse } from "@/types/type";
 import { useNotification } from "@/hooks/NotificationContext";
 import { getMyFamily } from "@/utils/familyApi";
 
-export default function Page({
-  params,
-}: {
-  params: Promise<{ action: string }>;
-}) {
+function PageContent({ params }: { params: Promise<{ action: string }> }) {
   const { addNotification } = useNotification();
   const navigation = useRouter();
   const searchParams = useSearchParams();
@@ -279,5 +275,17 @@ export default function Page({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page({
+  params,
+}: {
+  params: Promise<{ action: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <PageContent params={params} />
+    </Suspense>
   );
 }

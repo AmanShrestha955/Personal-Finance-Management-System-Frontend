@@ -14,6 +14,7 @@ import {
   updateUser,
   UpdateUserPayload,
 } from "@/utils/userApi";
+import { getPhotoUrl } from "@/utils/photoUtils";
 
 // ============================================
 // Types
@@ -91,8 +92,15 @@ const Page: NextPage = ({}) => {
   const [hasPhotoChanged, setHasPhotoChanged] = useState(false);
   // previewUrl starts from server photo, updates instantly when user picks a new file
   const [previewUrl, setPreviewUrl] = useState<string>(
-    user?.photo ?? "/default_user.jpg",
+    getPhotoUrl(user?.photo, user?.email, user?.provider),
   );
+
+  // Update previewUrl when user data changes
+  useEffect(() => {
+    if (user && !hasPhotoChanged) {
+      setPreviewUrl(getPhotoUrl(user.photo, user.email, user.provider));
+    }
+  }, [user, hasPhotoChanged]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

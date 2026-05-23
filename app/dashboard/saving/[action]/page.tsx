@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import {
@@ -17,12 +17,9 @@ import {
 } from "@/utils/savingGoalApi";
 import { BackendErrorResponse } from "@/types/type";
 import { useNotification } from "@/hooks/NotificationContext";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 
-export default function Page({
-  params,
-}: {
-  params: Promise<{ action: string }>;
-}) {
+function PageContent({ params }: { params: Promise<{ action: string }> }) {
   const { addNotification } = useNotification();
   const navigation = useRouter();
   const searchParams = useSearchParams();
@@ -131,13 +128,16 @@ export default function Page({
         {/* basic details */}
         <div className="flex flex-col gap-lg">
           <div className="flex flex-col p-lg gap-lg rounded-md bg-card-100 shadow-effect-2 font-nunitosans">
-            <h2 className="font-bold text-heading2 text-text-1000">
+            <h2 className="font-bold text-heading2 text-text-1000 capitalize">
               {savingGoal?.goalName}
             </h2>
             <div className="flex flex-col sm:flex-row justify-between gap-sm font-semibold text-body text-text-1000">
               <div className="flex flex-col lg:gap-lg gap-sm">
                 <p>Category: {savingGoal?.category}</p>
-                <p>Total Amount: Rs {savingGoal?.targetAmount}</p>
+                <p>
+                  Total Amount: Rs{" "}
+                  {formatToNepaliNumber(savingGoal?.targetAmount || 0)}
+                </p>
               </div>
               <div className="flex flex-col lg:gap-lg gap-sm">
                 <p>
@@ -155,8 +155,10 @@ export default function Page({
                 </p>
                 <p>
                   Remaining Amount: Rs{" "}
-                  {(savingGoal?.targetAmount as number) -
-                    ((savingGoal?.currentSaving as number) ?? 0)}
+                  {formatToNepaliNumber(
+                    (savingGoal?.targetAmount as number) -
+                      ((savingGoal?.currentSaving as number) ?? 0),
+                  )}
                 </p>
               </div>
             </div>
@@ -212,8 +214,9 @@ export default function Page({
             </h4>
             <div className="flex flex-col gap-xxs">
               <p className="font-nunitosans font-normal ">
-                You&apos;ve saved <b>Rs {savingGoal.currentSaving} </b> out of{" "}
-                <b>Rs {savingGoal.targetAmount}</b> for{" "}
+                You&apos;ve saved{" "}
+                <b>Rs {formatToNepaliNumber(savingGoal.currentSaving)} </b> out
+                of <b>Rs {formatToNepaliNumber(savingGoal.targetAmount)}</b> for{" "}
                 <b>{savingGoal.goalName}</b> budget.
               </p>
               <div className="relative h-1 w-full rounded-full bg-card-200 z-10 overflow-hidden">
@@ -236,5 +239,17 @@ export default function Page({
         )}
       </div>
     </div>
+  );
+}
+
+export default function Page({
+  params,
+}: {
+  params: Promise<{ action: string }>;
+}) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageContent params={params} />
+    </Suspense>
   );
 }

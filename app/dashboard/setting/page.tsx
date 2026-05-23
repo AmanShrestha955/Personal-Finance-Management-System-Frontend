@@ -1,6 +1,7 @@
 "use client";
 import { getMoneyHighlights } from "@/utils/statisticsApi";
 import { getUser } from "@/utils/userApi";
+import { getPhotoUrl } from "@/utils/photoUtils";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
@@ -37,12 +38,6 @@ const Page: NextPage = ({}) => {
 
   useEffect(() => {
     console.log("user Data: ", userData);
-    console.log(
-      "photoUrl:",
-      userData?.photo
-        ? `${process.env.NEXT_PUBLIC_API_URL}/${userData.photo}`
-        : null,
-    );
   }, [userData]);
   const router = useRouter();
   return (
@@ -122,7 +117,11 @@ const Page: NextPage = ({}) => {
             width={96}
             height={96}
             className="rounded-full size-[96px] bg-amber-200 object-cover"
-            src={`${userData?.photo ? `${process.env.NEXT_PUBLIC_API_URL}/${userData.photo}` : "/default_user.jpg"}`}
+            src={getPhotoUrl(
+              userData?.photo,
+              userData?.email,
+              userData?.provider,
+            )}
             alt="profile"
             unoptimized
           />

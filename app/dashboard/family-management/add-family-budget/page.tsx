@@ -20,7 +20,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 type BudgetFormData = {
@@ -29,7 +29,7 @@ type BudgetFormData = {
   alertThreshold: number;
 };
 
-const Page: NextPage = () => {
+const PageContent: NextPage = () => {
   const { addNotification } = useNotification();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -374,5 +374,11 @@ const Page: NextPage = () => {
     </div>
   );
 };
+
+const Page: NextPage = () => (
+  <Suspense fallback={null}>
+    <PageContent />
+  </Suspense>
+);
 
 export default Page;

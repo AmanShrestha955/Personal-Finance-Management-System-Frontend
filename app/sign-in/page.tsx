@@ -11,10 +11,10 @@ import { postData } from "@/utils/request";
 import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
 import { useGoogleLogin } from "@react-oauth/google";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
-const Page: NextPage = () => {
+const PageContent: NextPage = () => {
   const navigation = useRouter();
   const searchParams = useSearchParams();
   const [googleError, setGoogleError] = useState("");
@@ -26,12 +26,16 @@ const Page: NextPage = () => {
     mutationFn: async (data: SignInForm) =>
       postData<SignInForm, LoginData>("/auth/login", data),
     onSuccess: (data) => {
+      console.log("Sign in successful:", data);
       if (data.token) {
         if (rememberMe) {
           Cookies.set("token", data.token, { expires: 30 });
         } else {
           Cookies.set("token", data.token, { expires: 1 });
         }
+      }
+      if (!data.isOnboarded) {
+        navigation.push("/set-up");
       }
       const redirect = searchParams.get("redirect") || "/dashboard";
       navigation.push(redirect);
@@ -52,8 +56,13 @@ const Page: NextPage = () => {
         accessToken,
       }),
     onSuccess: (data) => {
+      console.log("Google sign-in successful:", data);
       if (data.token) {
         Cookies.set("token", data.token, { expires: 30 });
+      }
+      if (!data.isOnboarded) {
+        navigation.push("/set-up");
+        return;
       }
       const redirect = searchParams.get("redirect") || "/dashboard";
       navigation.push(redirect);
@@ -61,7 +70,7 @@ const Page: NextPage = () => {
     onError: (error: any) => {
       setGoogleError(
         error.response?.data?.message ||
-          "Google sign-in failed. Please try again."
+          "Google sign-in failed. Please try again.",
       );
     },
   });
@@ -271,6 +280,14 @@ const Page: NextPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const Page: NextPage = () => {
+  return (
+    <Suspense fallback={null}>
+      <PageContent />
+    </Suspense>
   );
 };
 

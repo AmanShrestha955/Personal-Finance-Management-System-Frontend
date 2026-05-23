@@ -1,4 +1,5 @@
 import { categoryColors, categoryIcons } from "@/utils/category";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 import { useState } from "react";
 
 const AutomatedTransactionsItemCard = ({
@@ -24,7 +25,7 @@ const AutomatedTransactionsItemCard = ({
   return (
     <div
       onClick={onClick}
-      className="flex flex-col p-md gap-md rounded-xl bg-card-100 shadow-effect-2 font-nunitosans hover:scale-[1.02] transition-transform duration-300"
+      className="flex flex-col p-md gap-md rounded-xl bg-card-100 shadow-effect-2 font-nunitosans hover:scale-[1.02] transition-transform duration-300 cursor-pointer"
     >
       <div className="flex flex-row gap-md items-center">
         <div
@@ -42,11 +43,7 @@ const AutomatedTransactionsItemCard = ({
           <p className="text-caption text-text-700">{category}</p>
         </div>
         <h1 className="text-heading3 font-bold text-text-1000">
-          Rs.{" "}
-          {amount.toLocaleString("en-NP", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          })}
+          Rs. {formatToNepaliNumber(amount)}
         </h1>
         {/* on off switch button */}
         <button

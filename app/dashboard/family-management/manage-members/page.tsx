@@ -18,6 +18,7 @@ import {
   PendingInvite,
 } from "@/utils/familyApi";
 import { useNotification } from "@/hooks/NotificationContext";
+import { getPhotoUrl } from "@/utils/photoUtils";
 
 const Page: NextPage = () => {
   const { addNotification } = useNotification();
@@ -222,9 +223,10 @@ const Page: NextPage = () => {
                         <Image
                           width={40}
                           height={40}
-                          src={`${process.env.NEXT_PUBLIC_API_URL}/${
-                            member.user.photo
-                          }`}
+                          src={getPhotoUrl(
+                            member.user.photo,
+                            member.user.email,
+                          )}
                           alt={member.user.name}
                           className="w-full h-full object-cover"
                           unoptimized

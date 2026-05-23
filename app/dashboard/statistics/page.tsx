@@ -28,6 +28,7 @@ import {
 } from "@/utils/statisticsApi";
 import { categoryColors, categoryIcons } from "@/utils/category";
 import { getFutureProjection } from "@/utils/statisticsApi";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 
 // interface Props {}
 
@@ -442,20 +443,12 @@ const Page: NextPage = ({}) => {
                           )}
                         </div>
                         <div className="flex flex-col gap-0 items-start font-nunitosans">
-                          <p className="text-heading3 text-text-1000">
+                          <p className="text-heading3 text-text-1000 capitalize">
                             {item.goalName}
                           </p>
                           <p className="text-body text-text-700 leading-[130%]">
-                            Rs.{" "}
-                            {item.currentSaving.toLocaleString("en-NP", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })}
-                            / Rs.{" "}
-                            {item.targetAmount.toLocaleString("en-NP", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })}
+                            Rs. {formatToNepaliNumber(item.currentSaving)} / Rs.{" "}
+                            {formatToNepaliNumber(item.targetAmount)}
                           </p>
                         </div>
                       </div>
@@ -483,12 +476,9 @@ const Page: NextPage = ({}) => {
                         </p>
                         <p className="text-text-1000 text-heading3 leading-[130%]">
                           Rs.{" "}
-                          {(
-                            item.targetAmount - item.currentSaving
-                          ).toLocaleString("en-NP", {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          })}
+                          {formatToNepaliNumber(
+                            item.targetAmount - item.currentSaving,
+                          )}
                         </p>
                       </div>
                       {item.projection.status === "on_track" &&
@@ -563,25 +553,13 @@ const Page: NextPage = ({}) => {
                             {item.category}
                           </p>
                           <p className="text-text-700 text-body leading-[130%]">
-                            Rs.{" "}
-                            {item.spentAmount.toLocaleString("en-NP", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })}{" "}
-                            / Rs.
-                            {item.budgetAmount.toLocaleString("en-NP", {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })}
+                            Rs. {formatToNepaliNumber(item.spentAmount)} / Rs.
+                            {formatToNepaliNumber(item.budgetAmount)}
                           </p>
                         </div>
                       </div>
                       <h1 className="text-body font-semibold text-text-1000">
-                        {(
-                          (item.spentAmount / item.budgetAmount) *
-                          100
-                        ).toPrecision(3)}
-                        %
+                        {(item.spentAmount / item.budgetAmount) * 100}%
                       </h1>
                     </div>
                     <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
@@ -594,12 +572,8 @@ const Page: NextPage = ({}) => {
                     </div>
                     <h1 className="text-body text-text-700">
                       Rs.{" "}
-                      {(item.budgetAmount - item.spentAmount).toLocaleString(
-                        "en-NP",
-                        {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        },
+                      {formatToNepaliNumber(
+                        item.budgetAmount - item.spentAmount,
                       )}{" "}
                       remaining
                     </h1>

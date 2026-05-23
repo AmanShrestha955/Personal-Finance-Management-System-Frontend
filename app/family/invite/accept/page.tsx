@@ -2,8 +2,9 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { acceptInvite } from "@/utils/familyApi";
+import { Suspense } from "react";
 
-const Page = () => {
+const PageContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token") ?? "";
@@ -112,6 +113,14 @@ const Page = () => {
         )}
       </div>
     </main>
+  );
+};
+
+const Page = () => {
+  return (
+    <Suspense fallback={null}>
+      <PageContent />
+    </Suspense>
   );
 };
 

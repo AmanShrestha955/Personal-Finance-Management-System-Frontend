@@ -13,6 +13,7 @@ export interface FamilyMember {
     name: string;
     email: string;
     photo?: string;
+    provider?: string;
   };
   email: string;
   role: FamilyRole;
@@ -34,6 +35,7 @@ export interface Family {
     name: string;
     email: string;
     photo?: string;
+    provider?: string;
   };
   members: FamilyMember[];
   pendingInvites: PendingInvite[];

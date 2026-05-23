@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteSavingGoal, GoalProjection } from "@/utils/savingGoalApi";
 import { useState } from "react";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 
 export type SavingGoalDetailCardProps = {
   id: string;
@@ -104,15 +105,15 @@ export default function SavingGoalDetailCard({
       <div className="flex flex-row flex-wrap gap-x-lg gap-y-xs">
         <div className="flex flex-row gap-sm font-semibold text-body">
           <p>Saved:</p>
-          <p>Rs {currentSaving.toLocaleString()}</p>
+          <p>Rs {formatToNepaliNumber(currentSaving)}</p>
         </div>
         <div className="flex flex-row gap-sm font-semibold text-body">
           <p>Target:</p>
-          <p>Rs {targetAmount.toLocaleString()}</p>
+          <p>Rs {formatToNepaliNumber(targetAmount)}</p>
         </div>
         <div className="flex flex-row gap-sm font-semibold text-body">
           <p>Remaining:</p>
-          <p>Rs {(targetAmount - currentSaving).toLocaleString()}</p>
+          <p>Rs {formatToNepaliNumber(targetAmount - currentSaving)}</p>
         </div>
         <div className="flex flex-row gap-sm font-semibold text-body">
           <p>Deadline:</p>

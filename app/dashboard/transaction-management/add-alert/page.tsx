@@ -5,12 +5,13 @@ import Input from "@/component/Input";
 import { useNotification } from "@/hooks/NotificationContext";
 import { BackendErrorResponse, BudgetFormResponseData } from "@/types/type";
 import { categoryWithIcon } from "@/utils/category";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 import { getData, postData, putData } from "@/utils/request";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 type BudgetFormData = {
@@ -48,7 +49,7 @@ type TotalSpendResponseData = {
   data: TotalSpendData;
 };
 
-const Page: NextPage = ({}) => {
+const PageContent: NextPage = ({}) => {
   const { addNotification } = useNotification();
   const [spendingPercentage, setSpendingPercentage] = useState<number>(0);
   const navigation = useRouter();
@@ -345,8 +346,12 @@ const Page: NextPage = ({}) => {
               Remaining Budget Preview
             </h1>
             <p className="font-medium text-body leading-[100%] ">
-              You&apos;ve spent <b>Rs {totalSpendingData?.totalSpend}</b> out of{" "}
-              <b>Rs {budgetAmt}</b> for <b>{selectedCategory.text}</b>
+              You&apos;ve spent{" "}
+              <b>
+                Rs {formatToNepaliNumber(totalSpendingData?.totalSpend || 0)}
+              </b>{" "}
+              out of <b>Rs {formatToNepaliNumber(budgetAmt)}</b> for{" "}
+              <b>{selectedCategory.text}</b>
             </p>
             <div className="relative h-1 w-full rounded-full bg-card-200 z-10">
               <div
@@ -365,5 +370,11 @@ const Page: NextPage = ({}) => {
     </div>
   );
 };
+
+const Page: NextPage = () => (
+  <Suspense fallback={null}>
+    <PageContent />
+  </Suspense>
+);
 
 export default Page;

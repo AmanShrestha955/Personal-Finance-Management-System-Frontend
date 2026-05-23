@@ -1,3 +1,4 @@
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 import React from "react";
 
 export default function ExpencesCard({
@@ -22,7 +23,7 @@ export default function ExpencesCard({
         </div>
         <p>{category}</p>
       </div>
-      <p>Rs {amount}</p>
+      <p>Rs {formatToNepaliNumber(amount)}</p>
     </div>
   );
 }

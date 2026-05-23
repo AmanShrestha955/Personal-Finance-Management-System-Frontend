@@ -17,6 +17,7 @@ import {
   getTop5Expenses,
   TimeFilter,
 } from "@/utils/homeApi";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 
 const Page: NextPage = ({}) => {
   const currentDate = new Date();
@@ -150,20 +151,20 @@ const Page: NextPage = ({}) => {
           <>
             <DashboardCard
               title="Total Income"
-              amount={`Rs ${accountSummaryData?.thisMonth.income || 0}`}
-              change={`Rs ${accountSummaryData?.monthChanges.income.amount || 0}`}
+              amount={`Rs ${formatToNepaliNumber(accountSummaryData?.thisMonth.income || 0)}`}
+              change={`Rs ${formatToNepaliNumber(accountSummaryData?.monthChanges.income.amount || 0)}`}
               percentage={`${accountSummaryData?.monthChanges.income.percentage || 0}%`}
             />
             <DashboardCard
               title="Total Expenses"
-              amount={`Rs ${accountSummaryData?.thisMonth.expenses || 0}`}
-              change={`Rs ${accountSummaryData?.monthChanges.expenses.amount || 0}`}
+              amount={`Rs ${formatToNepaliNumber(accountSummaryData?.thisMonth.expenses || 0)}`}
+              change={`Rs ${formatToNepaliNumber(accountSummaryData?.monthChanges.expenses.amount || 0)}`}
               percentage={`${accountSummaryData?.monthChanges.expenses.percentage || 0}%`}
             />
             <DashboardCard
               title="Net Balance"
-              amount={`Rs ${accountSummaryData?.totalBalance || 0}`}
-              change={`Rs ${accountSummaryData?.thisMonth.balance || 0}`}
+              amount={`Rs ${formatToNepaliNumber(accountSummaryData?.totalBalance || 0)}`}
+              change={`Rs ${formatToNepaliNumber(accountSummaryData?.thisMonth.balance || 0)}`}
               percentage={`${accountSummaryData?.monthChanges.balance.percentage || 0}%`}
             />
           </>
@@ -282,10 +283,12 @@ const Page: NextPage = ({}) => {
           </div>
           <h1 className="font-nunitosans text-heading font-semibold text-red-600">
             Rs{" "}
-            {top5ExpensesData?.reduce(
-              (acc, expense) => acc + expense.amount,
-              0,
-            ) || 0}
+            {formatToNepaliNumber(
+              top5ExpensesData?.reduce(
+                (acc, expense) => acc + expense.amount,
+                0,
+              ) || 0,
+            )}
           </h1>
           <PieChartComponent data={data} />
           <div className="flex flex-col gap-sm">

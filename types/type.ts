@@ -22,6 +22,7 @@ export type SignUpForm = {
 
 export type LoginData = {
   token?: string;
+  isOnboarded?: boolean;
   message: string;
   error?: string;
 };

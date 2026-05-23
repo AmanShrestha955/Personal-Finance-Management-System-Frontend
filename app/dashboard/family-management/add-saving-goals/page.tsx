@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import {
@@ -22,7 +22,7 @@ import { useNotification } from "@/hooks/NotificationContext";
 import { getMyFamily } from "@/utils/familyApi";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 
-const Page: NextPage = () => {
+const PageContent: NextPage = () => {
   const { addNotification } = useNotification();
   const navigation = useRouter();
   const searchParams = useSearchParams();
@@ -303,6 +303,14 @@ const Page: NextPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const Page: NextPage = () => {
+  return (
+    <Suspense fallback={null}>
+      <PageContent />
+    </Suspense>
   );
 };
 

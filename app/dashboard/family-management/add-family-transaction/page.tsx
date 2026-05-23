@@ -18,7 +18,7 @@ import { AxiosError } from "axios";
 import { NextPage } from "next";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { categoryWithIcon } from "@/utils/category";
 import { OthersIcon } from "@/component/icons/CategoryIcons";
@@ -37,7 +37,7 @@ type FamilyTransactionFormData = {
   note: string;
 };
 
-const Page: NextPage = () => {
+const PageContent: NextPage = () => {
   const { addNotification } = useNotification();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -636,4 +636,9 @@ const Page: NextPage = () => {
   );
 };
 
+const Page: NextPage = () => (
+  <Suspense fallback={null}>
+    <PageContent />
+  </Suspense>
+);
 export default Page;

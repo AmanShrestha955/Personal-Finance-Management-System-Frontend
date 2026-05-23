@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getSavingGoals, getSavingGoalsStats } from "@/utils/savingGoalApi";
 import { useRouter } from "next/navigation";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 
 const Page: NextPage = ({}) => {
   const navigator = useRouter();
@@ -75,7 +76,7 @@ const Page: NextPage = ({}) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
         <SavingInfoCard
           name="Total Saved"
-          value={`Rs ${savingGoalsStats ? savingGoalsStats.totalSaved.amount.toFixed(2) : "0.00"}`}
+          value={`Rs ${formatToNepaliNumber(savingGoalsStats ? savingGoalsStats.totalSaved.amount : 0)}`}
           monthPer={
             savingGoalsStats ? savingGoalsStats.totalSaved.percentageChange : 0
           }
@@ -93,7 +94,7 @@ const Page: NextPage = ({}) => {
         />
         <SavingInfoCard
           name="Remaining Balance"
-          value={`Rs ${savingGoalsStats ? savingGoalsStats.remainingBalance.amount.toFixed(2) : "0.00"}`}
+          value={`Rs ${formatToNepaliNumber(savingGoalsStats ? savingGoalsStats.remainingBalance.amount : 0)}`}
           monthAmount={
             savingGoalsStats ? savingGoalsStats.remainingBalance.difference : 0
           }

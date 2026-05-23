@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import {
@@ -18,8 +18,9 @@ import {
 import { categoryWithIcon } from "@/utils/category";
 import { OthersIcon } from "@/component/icons/CategoryIcons";
 import { useNotification } from "@/hooks/NotificationContext";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 
-const Page: NextPage = () => {
+const PageContent: NextPage = () => {
   const { addNotification } = useNotification();
   const navigation = useRouter();
   const searchParams = useSearchParams();
@@ -308,8 +309,10 @@ const Page: NextPage = () => {
             </h4>
             <div className="flex flex-col gap-xxs">
               <p className="font-nunitosans font-normal ">
-                You&apos;ve saved <b>Rs {currentSaving} </b> out of{" "}
-                <b>Rs {targetAmount}</b> for <b>{goalName}</b> budget.
+                You&apos;ve saved{" "}
+                <b>Rs {formatToNepaliNumber(currentSaving)} </b> out of{" "}
+                <b>Rs {formatToNepaliNumber(targetAmount)}</b> for{" "}
+                <b>{goalName}</b> budget.
               </p>
               <div className="relative h-1 w-full rounded-full bg-card-200 z-10 overflow-hidden">
                 <div
@@ -330,6 +333,14 @@ const Page: NextPage = () => {
         ) : null}
       </div>
     </div>
+  );
+};
+
+const Page: NextPage = () => {
+  return (
+    <Suspense fallback={null}>
+      <PageContent />
+    </Suspense>
   );
 };
 

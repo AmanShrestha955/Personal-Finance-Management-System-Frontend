@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ import {
   type Family,
 } from "@/utils/adminApi";
 
-export default function AdminFamiliesPage() {
+function AdminFamiliesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -421,5 +421,13 @@ export default function AdminFamiliesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AdminFamiliesPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFamiliesContent />
+    </Suspense>
   );
 }

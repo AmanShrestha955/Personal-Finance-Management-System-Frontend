@@ -13,11 +13,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import { categoryWithIcon } from "@/utils/category";
 import { OthersIcon } from "@/component/icons/CategoryIcons";
+import { useNotification } from "@/hooks/NotificationContext";
 
 type RecurringTransactionFormData = {
   title: string;
@@ -31,7 +32,8 @@ type RecurringTransactionFormData = {
   description?: string;
 };
 
-const Page: NextPage = () => {
+const PageContent: NextPage = () => {
+  const { addNotification } = useNotification();
   const navigation = useRouter();
   const searchParams = useSearchParams();
   const transactionId = searchParams.get("id");
@@ -82,6 +84,11 @@ const Page: NextPage = () => {
       return await createRecurringTransaction(payload);
     },
     onSuccess: () => {
+      addNotification(
+        "success",
+        "Create Recurring Transaction",
+        "Recurring transaction created successfully!",
+      );
       navigation.push("/dashboard/transaction-management");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
@@ -107,6 +114,11 @@ const Page: NextPage = () => {
       return await updateRecurringTransaction(transactionId!, payload);
     },
     onSuccess: () => {
+      addNotification(
+        "success",
+        "Update Recurring Transaction",
+        "Recurring transaction updated successfully!",
+      );
       navigation.push("/dashboard/transaction-management");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
@@ -471,5 +483,11 @@ const Page: NextPage = () => {
     </div>
   );
 };
+
+const Page: NextPage = () => (
+  <Suspense fallback={null}>
+    <PageContent />
+  </Suspense>
+);
 
 export default Page;

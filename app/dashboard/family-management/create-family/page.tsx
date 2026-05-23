@@ -37,7 +37,7 @@ const Page: NextPage = () => {
         "Family Created",
         "Your family has been created successfully",
       );
-      navigation.push("/dashboard/family");
+      navigation.push("/dashboard/family-management");
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
       const message = error?.response?.data?.error || error.message;
@@ -99,7 +99,7 @@ const Page: NextPage = () => {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              navigation.push("/dashboard/family");
+              navigation.push("/dashboard/family-management");
             }}
             className="font-nunitosans font-bold text-text-1000 text-body py-xs px-md rounded-sm border border-card-200 bg-card-100 hover:bg-card-200 active:bg-card-300 shadow-effect-2 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >

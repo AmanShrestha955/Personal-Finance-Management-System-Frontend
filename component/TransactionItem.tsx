@@ -4,6 +4,7 @@ import EditIcon from "./icons/edit";
 import DeleteIcon from "./icons/delete";
 import React from "react";
 import { useRouter } from "next/navigation";
+import { formatToNepaliNumber } from "@/utils/nepaliNumberFormat";
 
 type TransactionItemProps = {
   _id: string;
@@ -66,7 +67,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
         } leading-[130%] py-xs`}
       >
         {type === "expense" ? "- " : "+ "}
-        {amount}
+        {formatToNepaliNumber(amount)}
       </td>
       {action && (
         <td className="font-nunitosans font-bold text-body text-text-1000 leading-[130%] py-xs">

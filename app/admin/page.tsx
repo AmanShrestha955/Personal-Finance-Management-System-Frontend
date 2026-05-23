@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import Link from "next/link";
@@ -53,7 +53,7 @@ const DEFAULT_CATEGORY_DATA = [
   { name: "Others", value: 4800 },
 ];
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -321,18 +321,6 @@ export default function AdminDashboard() {
               </p>
             </Link>
 
-            {/* <Link
-              href="/admin/transactions"
-              className="block p-4 border border-text-300 rounded-lg hover:shadow-md hover:border-primary-500 transition-all duration-200"
-            >
-              <h3 className="font-nunitosans font-bold text-text-1000 mb-2">
-                View Transactions
-              </h3>
-              <p className="text-text-600 font-nunitosans text-sm">
-                Monitor all system transactions
-              </p>
-            </Link> */}
-
             <Link
               href="/admin/families"
               className="block p-4 border border-text-300 rounded-lg hover:shadow-md hover:border-primary-500 transition-all duration-200"
@@ -422,5 +410,13 @@ export default function AdminDashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={null}>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }

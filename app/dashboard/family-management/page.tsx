@@ -387,7 +387,7 @@ const Page: NextPage = ({}) => {
           {hasNoFamily && (
             <button
               onClick={() =>
-                router.push("/dashboard/family-management/add-family")
+                router.push("/dashboard/family-management/create-family")
               }
               className="flex flex-row gap-md px-md py-xs rounded-md bg-primary-500 text-white font-semibold text-body items-center"
             >
@@ -447,7 +447,7 @@ const Page: NextPage = ({}) => {
           </p>
           <button
             onClick={() =>
-              router.push("/dashboard/family-management/add-family")
+              router.push("/dashboard/family-management/create-family")
             }
             className="flex flex-row gap-sm p-sm h-2xl rounded-md bg-primary-500 text-white font-semibold text-body items-center px-md"
           >

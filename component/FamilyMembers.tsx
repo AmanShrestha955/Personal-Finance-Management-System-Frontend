@@ -1,5 +1,6 @@
 import { FamilyMemberCard } from "./FamilyMemberCard";
 import { Family, FamilyMember } from "@/utils/familyApi";
+import { getPhotoUrl } from "@/utils/photoUtils";
 
 interface FamilyMembersProps {
   family: Family;
@@ -17,15 +18,16 @@ export function FamilyMembers({ family, currentUserId }: FamilyMembersProps) {
         {family.members.map((member: FamilyMember) => {
           const isOwner = member.user?._id === family.owner._id;
           const isYou = member.user?._id === currentUserId;
+          console.log("Member user:", member.user);
 
           return (
             <FamilyMemberCard
               key={member._id}
-              memberImage={
-                member.user?.photo
-                  ? `${process.env.NEXT_PUBLIC_API_URL}/${member.user?.photo}`
-                  : "/default_user.jpg"
-              }
+              memberImage={getPhotoUrl(
+                member.user?.photo,
+                member.user?.email,
+                member.user?.provider,
+              )}
               name={
                 isYou
                   ? `${member.user?.name} (You)`
