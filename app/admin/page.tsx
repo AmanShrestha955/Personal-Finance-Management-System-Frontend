@@ -45,6 +45,15 @@ const DEFAULT_USER_GROWTH_DATA = [
   { month: "Jun", users: 1250 },
 ];
 
+const DEFAULT_TRANSACTION_VOLUME_DATA = [
+  { month: "Jan", transactions: 450 },
+  { month: "Feb", transactions: 620 },
+  { month: "Mar", transactions: 890 },
+  { month: "Apr", transactions: 1200 },
+  { month: "May", transactions: 1850 },
+  { month: "Jun", transactions: 2340 },
+];
+
 const DEFAULT_CATEGORY_DATA = [
   { name: "Food & Dining", value: 2400 },
   { name: "Transportation", value: 1398 },
@@ -109,6 +118,13 @@ function AdminDashboardContent() {
         users: item.count,
       })) || DEFAULT_USER_GROWTH_DATA;
 
+  const transactionVolumeFormatted = previewMode
+    ? DEFAULT_TRANSACTION_VOLUME_DATA
+    : response?.transactionGrowthData?.map((item) => ({
+        month: `${item._id.month}/${item._id.year.toString().slice(-2)}`,
+        transactions: item.count,
+      })) || DEFAULT_TRANSACTION_VOLUME_DATA;
+
   const categoryFormatted = previewMode
     ? DEFAULT_CATEGORY_DATA
     : response?.transactionByCategory?.map((item) => ({
@@ -118,6 +134,7 @@ function AdminDashboardContent() {
 
   const chartData = {
     userGrowth: userGrowthFormatted,
+    transactionVolume: transactionVolumeFormatted,
     categoryData: categoryFormatted,
   };
 
@@ -366,13 +383,17 @@ function AdminDashboardContent() {
               Transaction Volume
             </h2>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData.userGrowth}>
+              <BarChart data={chartData.transactionVolume}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="users" fill="#00C49F" name="New Users" />
+                <Bar
+                  dataKey="transactions"
+                  fill="#00C49F"
+                  name="Transactions"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -382,30 +403,79 @@ function AdminDashboardContent() {
             <h2 className="text-heading3 font-sansation font-bold text-text-1000 mb-4">
               Expense Category Distribution
             </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={chartData.categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) =>
-                    `${name}: ${((value / chartData.categoryData.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1)}%`
-                  }
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {chartData.categoryData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Pie Chart */}
+              <div className="lg:col-span-1">
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={chartData.categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={false}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {chartData.categoryData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value) =>
+                        value ? `NPR ${value.toLocaleString()}` : "NPR 0"
+                      }
                     />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Category Legend */}
+              <div className="lg:col-span-2">
+                <h3 className="text-sm font-nunitosans font-bold text-text-1000 mb-4">
+                  Category Breakdown
+                </h3>
+                <div className="space-y-3">
+                  {chartData.categoryData.map((item, index) => {
+                    const total = chartData.categoryData.reduce(
+                      (sum, cat) => sum + cat.value,
+                      0,
+                    );
+                    const percentage = ((item.value / total) * 100).toFixed(1);
+                    return (
+                      <div
+                        key={`legend-${index}`}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-4 h-4 rounded"
+                            style={{
+                              backgroundColor: COLORS[index % COLORS.length],
+                            }}
+                          />
+                          <span className="text-text-700 font-nunitosans text-sm font-medium">
+                            {item.name}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-text-1000 font-nunitosans font-bold text-sm">
+                            {percentage}%
+                          </p>
+                          <p className="text-text-600 font-nunitosans text-xs">
+                            NPR {item.value.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

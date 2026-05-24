@@ -16,6 +16,10 @@ export interface DashboardResponse {
     _id: { month: number; year: number };
     count: number;
   }>;
+  transactionGrowthData: Array<{
+    _id: { month: number; year: number };
+    count: number;
+  }>;
   recentTransactions: any[];
   transactionByCategory: any[];
 }
