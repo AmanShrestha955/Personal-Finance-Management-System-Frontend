@@ -36,6 +36,7 @@ const PageContent: NextPage = () => {
       }
       if (!data.isOnboarded) {
         navigation.push("/set-up");
+        return;
       }
       const redirect = searchParams.get("redirect") || "/dashboard";
       navigation.push(redirect);

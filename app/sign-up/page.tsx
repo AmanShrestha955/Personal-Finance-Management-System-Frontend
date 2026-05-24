@@ -64,7 +64,11 @@ const PageContent: NextPage = () => {
       if (data.token) {
         Cookies.set("token", data.token, { expires: 30 });
       }
-      navigation.push("/dashboard");
+      if (data.isOnboarded === false) {
+        navigation.push("/set-up");
+      } else {
+        navigation.push("/dashboard");
+      }
     },
     onError: (error: any) => {
       setGoogleError(

@@ -170,7 +170,7 @@ const AdminSignInPage: NextPage = () => {
       {/* right side - hidden on mobile */}
       <div className="flex-1 rounded-lg bg-primary-500 relative hidden lg:flex">
         <div
-          className="flex-1 hidden lg:block bg-cover rounded-2xl absolute opacity-20 w-full h-full rounded-lg bg-center blur-[2px]"
+          className="flex-1 hidden lg:block bg-cover absolute opacity-20 w-full h-full rounded-lg bg-center blur-[2px]"
           style={{
             backgroundImage: `url(${backgroundImage.src})`,
           }}
