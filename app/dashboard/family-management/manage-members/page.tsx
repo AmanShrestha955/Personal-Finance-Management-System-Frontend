@@ -226,6 +226,7 @@ const Page: NextPage = () => {
                           src={getPhotoUrl(
                             member.user.photo,
                             member.user.email,
+                            member.user.provider,
                           )}
                           alt={member.user.name}
                           className="w-full h-full object-cover"
