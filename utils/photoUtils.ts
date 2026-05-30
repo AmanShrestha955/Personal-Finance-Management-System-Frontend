@@ -14,6 +14,7 @@ export const getPhotoUrl = (
   if (photo) {
     // If provider is Google, return photo URL as-is (direct URL from Google)
     if (provider === "google") {
+      console.log("Google provider detected, using photo URL as-is:", photo);
       return photo;
     }
     // If provider is not specified or is local, prepend API URL

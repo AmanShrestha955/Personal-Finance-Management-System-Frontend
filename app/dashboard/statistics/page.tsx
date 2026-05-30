@@ -13,6 +13,7 @@ import {
   Goal,
   TrendingUp,
   TrendingDown,
+  Zap,
 } from "lucide-react";
 import { exportAsCSV, exportAsPDF } from "@/utils/exportApi";
 import { NextPage } from "next";
@@ -191,12 +192,14 @@ const Page: NextPage = ({}) => {
         >
           <div className="flex flex-col gap-xs flex-1">
             <div
-              className={`w-[48px] h-[48px] rounded-md ${
+              className={`w-[48px] h-[48px] rounded-md flex justify-center items-center ${
                 (projectionData.data.summary?.growthRate ?? 0) < 5
                   ? "bg-white/20"
                   : "bg-primary-300"
               }`}
-            ></div>
+            >
+              <Zap size={24} />
+            </div>
             <p className="text-body">Future Projection</p>
 
             <p className="text-heading2">
